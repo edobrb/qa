@@ -836,6 +836,60 @@ html, body, #root { background: var(--background); }
   .fw-import-mode-fields { grid-template-columns: 1fr; }
 }
 
+/* Audit import dialog: stats grid + warning banner + restore card */
+.audit-stats {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px;
+}
+.audit-stat {
+  padding: 10px 12px;
+  border: 1px solid var(--border); border-radius: var(--radius-md);
+  background: var(--card);
+  display: flex; flex-direction: column; gap: 2px;
+}
+.audit-stat-num {
+  font-size: 22px; font-weight: 700; line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--foreground);
+}
+.audit-stat-label {
+  font-size: 11px; line-height: 1.35;
+  color: var(--muted-foreground);
+}
+.audit-stat[data-tone="ok"] {
+  border-color: color-mix(in oklch, var(--success) 35%, var(--border));
+  background: color-mix(in oklch, var(--success) 8%, var(--card));
+}
+.audit-stat[data-tone="ok"] .audit-stat-num { color: var(--success); }
+.audit-stat[data-tone="warn"] {
+  border-color: color-mix(in oklch, var(--warning) 40%, var(--border));
+  background: color-mix(in oklch, var(--warning) 10%, var(--card));
+}
+.audit-stat[data-tone="warn"] .audit-stat-num { color: var(--warning); }
+.audit-stat[data-tone="muted"] .audit-stat-num { color: var(--muted-foreground); }
+
+.audit-warn {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in oklch, var(--warning) 40%, var(--border));
+  background: color-mix(in oklch, var(--warning) 12%, var(--card));
+  border-radius: var(--radius-md);
+  font-size: 12px; line-height: 1.5;
+}
+.audit-warn > svg { color: var(--warning); flex-shrink: 0; margin-top: 1px; }
+
+.audit-restore {
+  display: flex; gap: 10px; align-items: flex-start;
+  padding: 12px;
+  border: 1px solid var(--border); border-radius: var(--radius-md);
+  background: var(--card);
+  cursor: pointer;
+}
+.audit-restore input { margin-top: 3px; flex-shrink: 0; }
+
+@media (max-width: 540px) {
+  .audit-stats { grid-template-columns: repeat(2, 1fr); }
+}
+
 /* Tag editor */
 .qe-tag-row {
   display: flex; flex-wrap: wrap; gap: 6px;

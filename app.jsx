@@ -50,6 +50,7 @@ function App() {
   const [showFwReset, setShowFwReset] = React.useState(false);
   const [showFwExport, setShowFwExport] = React.useState(false);
   const [pendingFwImport, setPendingFwImport] = React.useState(null); // candidate framework JSON
+  const [pendingAuditImport, setPendingAuditImport] = React.useState(null); // { file, parsed, summary }
   const [showAbout, setShowAbout] = React.useState(false);
 
   const cellQuestions = React.useMemo(() => {
@@ -249,30 +250,31 @@ function App() {
           flag: !!r.follow_up,
         };
       }
-      const fwMismatch = j.framework_version && j.framework_version !== DB.AUDIT_META.framework_version;
-      const lines = [
-        `Importazione audit:`,
-        `· ${j.results.length} risposte nel file (${withAnswer} compilate)`,
-        `· ${matched} corrispondono al framework corrente, ${unknown} non riconosciute`,
-      ];
-      if (fwMismatch) {
-        lines.push(`⚠ versione framework diversa: file v${j.framework_version} vs corrente v${DB.AUDIT_META.framework_version}`);
-      }
-      if (j.project) {
-        lines.push(`· verranno aggiornati anche i dettagli del progetto (${j.project.client || "—"})`);
-      }
-      lines.push("", "Procedere?");
-      if (!confirm(lines.join("\n"))) return;
-
-      DB.persistence.saveStates(next);
-      if (j.project && typeof j.project === "object") {
-        const meta = DB.persistence.loadMeta();
-        // Preserve the active framework_id (changing it would force another reload).
-        DB.persistence.saveMeta({ ...meta, ...j.project, framework_id: meta.framework_id || j.project.framework_id });
-      }
-      location.reload();
+      setPendingAuditImport({
+        parsed: j,
+        nextStates: next,
+        summary: {
+          total: j.results.length,
+          matched,
+          unknown,
+          withAnswer,
+          fwMismatch: j.framework_version && j.framework_version !== DB.AUDIT_META.framework_version,
+        },
+      });
     };
     reader.readAsText(file);
+  };
+  const doImportAudit = ({ restoreProject }) => {
+    const p = pendingAuditImport;
+    if (!p) return;
+    DB.persistence.saveStates(p.nextStates);
+    if (restoreProject && p.parsed.project && typeof p.parsed.project === "object") {
+      const meta = DB.persistence.loadMeta();
+      // Preserve the active framework_id (changing it would force another reload).
+      DB.persistence.saveMeta({ ...meta, ...p.parsed.project, framework_id: meta.framework_id || p.parsed.project.framework_id });
+    }
+    setPendingAuditImport(null);
+    location.reload();
   };
 
   return (
@@ -387,6 +389,15 @@ function App() {
           currentName={DB.AUDIT_META.framework_name}
           onConfirm={doImportFramework}
           onClose={() => setPendingFwImport(null)} />
+      )}
+      {pendingAuditImport && (
+        <ImportAuditDialog
+          parsed={pendingAuditImport.parsed}
+          summary={pendingAuditImport.summary}
+          currentFrameworkVersion={DB.AUDIT_META.framework_version}
+          currentClient={project.client}
+          onConfirm={doImportAudit}
+          onClose={() => setPendingAuditImport(null)} />
       )}
       {showAbout && <AboutDialog onClose={() => setShowAbout(false)} />}
     </div>
@@ -1263,6 +1274,120 @@ const uniqueFrameworkId = (base, taken) => {
   while (taken.has(`${b}_${n}`)) n++;
   return `${b}_${n}`;
 };
+
+function ImportAuditDialog({ parsed, summary, currentFrameworkVersion, currentClient, onConfirm, onClose }) {
+  const proj = parsed.project || {};
+  const hasProject = !!(proj.client || proj.visit_date || proj.auditor || proj.scope);
+  const [restoreProject, setRestoreProject] = React.useState(hasProject);
+  const fmtDate = (s) => {
+    if (!s) return "—";
+    const d = new Date(s);
+    return Number.isNaN(d.getTime()) ? s : d.toLocaleString("it-IT");
+  };
+  const willOverwriteClient = restoreProject && currentClient && proj.client && proj.client !== currentClient;
+
+  return (
+    <div className="modal-backdrop" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="modal modal-lg">
+        <div className="modal-head">
+          <h2>Importa risposte audit</h2>
+          <span style={{ flex: 1 }} />
+          <button className="btn" data-variant="ghost" onClick={onClose}><Icon d={IC.x} size={14}/></button>
+        </div>
+        <div className="modal-body">
+          <p style={{ margin: 0, fontSize: 12, color: "var(--muted-foreground)", lineHeight: 1.5 }}>
+            Le risposte verranno applicate al framework attualmente attivo. Lo stato precedente nel browser sarà sovrascritto.
+          </p>
+
+          <div className="fw-import-summary">
+            {hasProject && (
+              <>
+                <div className="fw-import-row">
+                  <span className="fw-import-label">Cliente</span>
+                  <span>{proj.client || "—"}</span>
+                </div>
+                <div className="fw-import-row">
+                  <span className="fw-import-label">Auditor</span>
+                  <span>{proj.auditor || "—"}</span>
+                </div>
+                <div className="fw-import-row">
+                  <span className="fw-import-label">Data visita</span>
+                  <span>{proj.visit_date || "—"}</span>
+                </div>
+              </>
+            )}
+            <div className="fw-import-row">
+              <span className="fw-import-label">Esportato</span>
+              <span>{fmtDate(parsed.exported_at)}</span>
+            </div>
+            <div className="fw-import-row">
+              <span className="fw-import-label">Versione framework</span>
+              <span>
+                {parsed.framework_version || "—"}
+                {summary.fwMismatch && (
+                  <span style={{ marginLeft: 8, color: "var(--warning)", fontWeight: 600, fontSize: 11 }}>
+                    ⚠ corrente: v{currentFrameworkVersion}
+                  </span>
+                )}
+              </span>
+            </div>
+          </div>
+
+          <div className="audit-stats">
+            <div className="audit-stat">
+              <div className="audit-stat-num">{summary.total}</div>
+              <div className="audit-stat-label">risposte nel file</div>
+            </div>
+            <div className="audit-stat">
+              <div className="audit-stat-num">{summary.withAnswer}</div>
+              <div className="audit-stat-label">compilate</div>
+            </div>
+            <div className="audit-stat" data-tone={summary.matched ? "ok" : "muted"}>
+              <div className="audit-stat-num">{summary.matched}</div>
+              <div className="audit-stat-label">corrispondono al framework attivo</div>
+            </div>
+            <div className="audit-stat" data-tone={summary.unknown ? "warn" : "muted"}>
+              <div className="audit-stat-num">{summary.unknown}</div>
+              <div className="audit-stat-label">non riconosciute</div>
+            </div>
+          </div>
+
+          {summary.fwMismatch && (
+            <div className="audit-warn">
+              <Icon d={IC.warn} size={14} />
+              <span>La versione del framework nel file (<strong>v{parsed.framework_version}</strong>) è diversa da quella attiva (<strong>v{currentFrameworkVersion}</strong>). Le risposte non riconosciute resteranno nel browser ma non saranno visibili.</span>
+            </div>
+          )}
+
+          {hasProject && (
+            <label className="audit-restore">
+              <input type="checkbox" checked={restoreProject} onChange={(e) => setRestoreProject(e.target.checked)} />
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: "var(--foreground)" }}>
+                  Aggiorna anche i dettagli del progetto
+                </div>
+                <div style={{ fontSize: 12, color: "var(--muted-foreground)", lineHeight: 1.45 }}>
+                  Cliente, data visita, auditor e scope verranno presi dal file.
+                  {willOverwriteClient && (
+                    <span style={{ color: "var(--warning)", display: "block", marginTop: 2, fontWeight: 500 }}>
+                      ⚠ Cliente attivo "{currentClient}" verrà sostituito da "{proj.client}".
+                    </span>
+                  )}
+                </div>
+              </div>
+            </label>
+          )}
+        </div>
+        <div className="modal-foot">
+          <button className="btn" data-variant="ghost" onClick={onClose}>Annulla</button>
+          <button className="btn" data-variant="primary" onClick={() => onConfirm({ restoreProject })}>
+            Importa e ricarica
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function ImportFrameworkDialog({ candidate, currentId, currentName, onConfirm, onClose }) {
   const meta = candidate.metadata || {};
