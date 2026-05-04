@@ -1,0 +1,419 @@
+/*
+ * Polar Design System — Colors & Type
+ *
+ * This is a flat, non-Tailwind CSS file exposing Polar's foundation tokens
+ * as CSS custom properties + semantic element styles. It is portable and can
+ * be dropped into prototypes, slide decks, and throwaway mocks.
+ *
+ * Upstream sources:
+ *   - tokens/themes.css           → generated theme variables
+ *   - tokens/base.css             → component sizing + radii + focus tokens
+ *   - react/src/components/*.tsx  → semantic role usage (how tokens map to UI)
+ *
+ * Polar ships four themes. Default = light. Toggle by setting
+ * [data-theme="dark"|"vapor"|"fic"] on <html> or an ancestor, OR add
+ * class="dark" for legacy shadcn compatibility.
+ */
+
+/* =============================================================== */
+/*  THEME: LIGHT (default)                                          */
+/* =============================================================== */
+:root,
+[data-theme="light"] {
+    /* Radii */
+    --radius: 0.625rem;
+    --radius-sm: calc(var(--radius) - 4px); /* 6px */
+    --radius-md: calc(var(--radius) - 2px); /* 8px */
+    --radius-lg: var(--radius);             /* 10px */
+    --radius-xl: calc(var(--radius) + 4px); /* 14px */
+    --radius-2xl: calc(var(--radius) + 8px);
+    --radius-3xl: calc(var(--radius) + 12px);
+    --radius-4xl: calc(var(--radius) + 16px);
+
+    /* Borders + focus */
+    --border-width: 1px;
+    --focus-ring-width: 3px;
+
+    /* Type families */
+    --font-family-base: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-family-heading: var(--font-family-base);
+    --font-family-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+    /* Neutral surfaces / foreground (shadcn lineage; neutral grayscale) */
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.145 0 0);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.145 0 0);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.145 0 0);
+
+    /* Semantic roles */
+    --primary: oklch(0.205 0 0);            /* near-black */
+    --primary-foreground: oklch(0.985 0 0);
+    --secondary: oklch(0.97 0 0);           /* subtle gray chip */
+    --secondary-foreground: oklch(0.205 0 0);
+    --muted: oklch(0.97 0 0);
+    --muted-foreground: oklch(0.556 0 0);
+    --accent: oklch(0.97 0 0);
+    --accent-foreground: oklch(0.205 0 0);
+    --destructive: oklch(0.577 0.245 27.325);
+    --destructive-foreground: oklch(0.985 0 0);
+
+    /* Status scales (hex — unchanged across themes where not redefined) */
+    --success: #16a34a;
+    --success-foreground: #14532d;
+    --success-surface: #f0fdf4;
+    --success-surface-hover: #dcfce7;
+    --success-border: #22c55e;
+    --success-icon: #16a34a;
+
+    --warning: #ca8a04;
+    --warning-foreground: #713f12;
+    --warning-surface: #fefce8;
+    --warning-surface-hover: #fef9c3;
+    --warning-border: #eab308;
+    --warning-icon: #ca8a04;
+
+    --info: #2563eb;
+    --info-foreground: #1e3a8a;
+    --info-surface: #eff6ff;
+    --info-surface-hover: #dbeafe;
+    --info-border: #3b82f6;
+    --info-icon: #2563eb;
+
+    /* Lines + inputs + rings */
+    --border: oklch(0.922 0 0);
+    --input: oklch(0.922 0 0);
+    --ring: oklch(0.708 0 0);
+    --overlay: rgb(0 0 0 / 80%);
+
+    /* Charts */
+    --chart-1: oklch(0.646 0.222 41.116);
+    --chart-2: oklch(0.6 0.118 184.704);
+    --chart-3: oklch(0.398 0.07 227.392);
+    --chart-4: oklch(0.828 0.189 84.429);
+    --chart-5: oklch(0.769 0.188 70.08);
+
+    /* Sidebar (often same as background but kept distinct) */
+    --sidebar: oklch(0.985 0 0);
+    --sidebar-foreground: oklch(0.145 0 0);
+    --sidebar-primary: oklch(0.205 0 0);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-accent: oklch(0.97 0 0);
+    --sidebar-accent-foreground: oklch(0.205 0 0);
+    --sidebar-border: oklch(0.922 0 0);
+    --sidebar-ring: oklch(0.708 0 0);
+
+    --gradient-primary: linear-gradient(135deg, oklch(0.646 0.222 41.116) 0%, oklch(0.205 0 0) 100%);
+}
+
+/* =============================================================== */
+/*  THEME: DARK                                                     */
+/* =============================================================== */
+[data-theme="dark"],
+.dark {
+    --background: oklch(0.145 0 0);
+    --foreground: oklch(0.985 0 0);
+    --card: oklch(0.205 0 0);
+    --card-foreground: oklch(0.985 0 0);
+    --popover: oklch(0.205 0 0);
+    --popover-foreground: oklch(0.985 0 0);
+    --primary: oklch(0.922 0 0);
+    --primary-foreground: oklch(0.205 0 0);
+    --secondary: oklch(0.269 0 0);
+    --secondary-foreground: oklch(0.985 0 0);
+    --muted: oklch(0.269 0 0);
+    --muted-foreground: oklch(0.708 0 0);
+    --accent: oklch(0.269 0 0);
+    --accent-foreground: oklch(0.985 0 0);
+    --destructive: oklch(0.704 0.191 22.216);
+    --destructive-foreground: oklch(0.985 0 0);
+    --border: oklch(1 0 0 / 10%);
+    --input: oklch(1 0 0 / 15%);
+    --ring: oklch(0.556 0 0);
+
+    --success: #22c55e;
+    --success-foreground: #dcfce7;
+    --success-surface: #052e16;
+    --success-surface-hover: #14532d;
+    --success-border: #22c55e;
+    --success-icon: #4ade80;
+    --warning: #eab308;
+    --warning-foreground: #fef9c3;
+    --warning-surface: #422006;
+    --warning-surface-hover: #713f12;
+    --warning-border: #eab308;
+    --warning-icon: #facc15;
+    --info: #3b82f6;
+    --info-foreground: #dbeafe;
+    --info-surface: #172554;
+    --info-surface-hover: #1e3a8a;
+    --info-border: #3b82f6;
+    --info-icon: #60a5fa;
+
+    --chart-1: oklch(0.488 0.243 264.376);
+    --chart-2: oklch(0.696 0.17 162.48);
+    --chart-3: oklch(0.769 0.188 70.08);
+    --chart-4: oklch(0.627 0.265 303.9);
+    --chart-5: oklch(0.645 0.246 16.439);
+
+    --sidebar: oklch(0.205 0 0);
+    --sidebar-foreground: oklch(0.985 0 0);
+    --sidebar-primary: oklch(0.488 0.243 264.376);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-accent: oklch(0.269 0 0);
+    --sidebar-accent-foreground: oklch(0.985 0 0);
+    --sidebar-border: oklch(1 0 0 / 10%);
+    --sidebar-ring: oklch(0.556 0 0);
+    --gradient-primary: linear-gradient(135deg, oklch(0.488 0.243 264.376) 0%, oklch(0.922 0 0) 100%);
+}
+
+/* =============================================================== */
+/*  THEME: VAPOR (Zoi / TeamSystem blue — "Zephyr" palette)         */
+/*  Font: Cairo (headings) + Roboto (body)                          */
+/* =============================================================== */
+[data-theme="vapor"] {
+    --radius: 0.25rem;                       /* tighter, more utilitarian */
+    --focus-ring-width: 2px;
+
+    --font-family-base: Roboto, Inter, ui-sans-serif, system-ui, sans-serif;
+    --font-family-heading: Cairo, Roboto, Inter, ui-sans-serif, system-ui, sans-serif;
+
+    --background: #ffffff;
+    --foreground: #152935;                   /* ink slate */
+    --card: #ffffff;
+    --card-foreground: #152935;
+    --popover: #ffffff;
+    --popover-foreground: #152935;
+
+    --primary: oklch(0.622 0.146 241.492);   /* vapor blue 600 */
+    --primary-foreground: #ffffff;
+    --secondary: hsla(206, 12%, 91%, 1);
+    --secondary-foreground: hsla(206, 12%, 34%, 1);
+    --muted: hsla(206, 12%, 96%, 1);
+    --muted-foreground: #5a6872;
+    --accent: hsla(199, 100%, 91%, 1);
+    --accent-foreground: hsla(199, 100%, 34%, 1);
+
+    --destructive: hsla(0, 100%, 41%, 1);
+    --destructive-foreground: #ffffff;
+
+    --success: hsla(136, 55%, 34%, 1);
+    --success-foreground: hsla(136, 55%, 16%, 1);
+    --success-surface: hsla(136, 55%, 96%, 1);
+    --success-surface-hover: hsla(136, 55%, 91%, 1);
+    --success-border: hsla(136, 55%, 55%, 1);
+    --success-icon: hsla(136, 55%, 34%, 1);
+
+    --warning: hsla(41, 75%, 34%, 1);
+    --warning-foreground: hsla(41, 75%, 16%, 1);
+    --warning-surface: hsla(41, 75%, 96%, 1);
+    --warning-surface-hover: hsla(41, 75%, 91%, 1);
+    --warning-border: hsla(41, 75%, 55%, 1);
+    --warning-icon: hsla(41, 75%, 34%, 1);
+
+    --info: hsla(199, 100%, 34%, 1);
+    --info-foreground: hsla(199, 100%, 16%, 1);
+    --info-surface: hsla(199, 100%, 96%, 1);
+    --info-surface-hover: hsla(199, 100%, 91%, 1);
+    --info-border: hsla(199, 100%, 34%, 1);
+    --info-icon: hsla(199, 100%, 34%, 1);
+
+    --border: hsla(206, 12%, 86%, 1);
+    --input: #ffffff;
+    --ring: hsla(199, 100%, 34%, 1);
+    --overlay: hsla(206, 12%, 16%, 0.48);
+
+    --chart-1: hsla(199, 100%, 34%, 1);
+    --chart-2: hsla(191, 75%, 34%, 1);
+    --chart-3: hsla(230, 100%, 34%, 1);
+    --chart-4: hsla(136, 55%, 34%, 1);
+    --chart-5: hsla(41, 75%, 34%, 1);
+
+    --sidebar: #ffffff;
+    --sidebar-foreground: #152935;
+    --sidebar-primary: hsla(199, 100%, 34%, 1);
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: hsla(199, 100%, 91%, 1);
+    --sidebar-accent-foreground: hsla(199, 100%, 34%, 1);
+    --sidebar-border: hsla(206, 12%, 86%, 1);
+    --sidebar-ring: hsla(199, 100%, 34%, 1);
+
+    --gradient-primary: linear-gradient(-45deg, hsla(199, 100%, 51%, 1) 0%, hsla(199, 100%, 34%, 1) 100%);
+}
+
+/* =============================================================== */
+/*  THEME: FIC (flatter, single-accent cyan)                        */
+/* =============================================================== */
+[data-theme="fic"] {
+    --radius: 0.375rem;
+    --focus-ring-width: 2px;
+    --font-family-base: Inter, sans-serif;
+    --font-family-heading: Inter, sans-serif;
+
+    --background: hsla(0, 0%, 100%, 1);
+    --foreground: hsla(206, 12%, 7%, 1);
+    --card: hsla(0, 0%, 100%, 1);
+    --card-foreground: hsla(206, 12%, 7%, 1);
+    --popover: hsla(0, 0%, 100%, 1);
+    --popover-foreground: hsla(206, 12%, 7%, 1);
+    --primary: hsla(199, 88%, 46%, 1);
+    --primary-foreground: hsla(0, 0%, 100%, 1);
+    --secondary: hsla(206, 12%, 91%, 1);
+    --secondary-foreground: hsla(206, 12%, 34%, 1);
+    --muted: hsla(206, 12%, 96%, 1);
+    --muted-foreground: hsla(206, 12%, 34%, 1);
+    --accent: hsla(199, 88%, 96%, 1);
+    --accent-foreground: hsla(199, 88%, 46%, 1);
+    --destructive: hsla(0, 100%, 41%, 1);
+    --destructive-foreground: hsla(0, 0%, 100%, 1);
+    --border: hsla(206, 12%, 86%, 1);
+    --input: hsla(0, 0%, 100%, 1);
+    --ring: hsla(199, 88%, 46%, 1);
+    --gradient-primary: linear-gradient(-45deg, hsla(199, 88%, 51%, 1) 0%, hsla(199, 88%, 34%, 1) 100%);
+}
+
+/* =============================================================== */
+/*  BASE RULES                                                      */
+/* =============================================================== */
+html { color-scheme: light; }
+html.dark, html[data-theme="dark"] { color-scheme: dark; }
+
+body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-family-base);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* =============================================================== */
+/*  TYPOGRAPHY — semantic elements                                  */
+/* =============================================================== */
+h1, .h1 {
+    font-family: var(--font-family-heading);
+    font-size: 2.25rem;        /* 36px — text-4xl */
+    font-weight: 800;          /* extrabold per Polar H1 */
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    text-wrap: balance;
+    color: var(--foreground);
+}
+@media (min-width: 1024px) {
+    h1, .h1 { font-size: 3rem; }   /* 48px lg:text-5xl */
+}
+h2, .h2 {
+    font-family: var(--font-family-heading);
+    font-size: 1.875rem;       /* 30px — text-3xl */
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    line-height: 1.15;
+    color: var(--foreground);
+}
+h3, .h3 {
+    font-family: var(--font-family-heading);
+    font-size: 1.5rem;         /* 24px */
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+    color: var(--foreground);
+}
+h4, .h4 {
+    font-family: var(--font-family-heading);
+    font-size: 1.25rem;        /* 20px */
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    line-height: 1.25;
+    color: var(--foreground);
+}
+
+p, .p {
+    font-size: 0.875rem;       /* 14px — Polar base */
+    line-height: 1.75rem;      /* 28px — var(--typography-paragraph-leading) */
+    color: var(--foreground);
+}
+p + p { margin-top: 1.5rem; }
+
+.lead   { font-size: 1.25rem; color: var(--muted-foreground); }
+.large  { font-size: 1.125rem; font-weight: 600; }
+.small  { font-size: 0.875rem; font-weight: 500; line-height: 1; }
+.muted  { font-size: 0.875rem; color: var(--muted-foreground); }
+
+code, .code {
+    font-family: var(--font-family-mono);
+    font-size: 0.875rem;
+    font-weight: 600;
+    background: var(--muted);
+    padding: 0.2rem 0.3rem;
+    border-radius: var(--radius-sm);
+}
+pre code {
+    display: block;
+    padding: 1rem;
+    border-radius: var(--radius-lg);
+    font-weight: 400;
+    overflow-x: auto;
+}
+
+a, .link {
+    color: var(--primary);
+    font-weight: 500;
+    text-decoration: none;
+    text-underline-offset: 0.25rem;
+}
+a:hover, .link:hover { text-decoration: underline; }
+
+blockquote {
+    margin-top: 1.5rem;
+    padding-inline-start: 1.5rem;
+    border-inline-start: 2px solid var(--border);
+    font-style: italic;
+    color: var(--foreground);
+}
+blockquote footer {
+    display: block;
+    margin-top: 0.5rem;
+    color: var(--muted-foreground);
+    font-size: 0.875rem;
+    font-style: normal;
+}
+
+ul.polar, ol.polar {
+    margin: 1.5rem 0 1.5rem 1.5rem;
+    list-style-position: outside;
+}
+ul.polar { list-style: disc; }
+ol.polar { list-style: decimal; }
+ul.polar li + li,
+ol.polar li + li { margin-top: 0.5rem; }
+
+hr { border: 0; border-top: 1px solid var(--border); margin: 1.5rem 0; }
+
+::selection { background: var(--primary); color: var(--primary-foreground); }
+
+/* =============================================================== */
+/*  SPACING + SHADOWS (Polar does not use a custom scale; these are  */
+/*  Tailwind defaults referenced by components.)                     */
+/* =============================================================== */
+:root {
+    --space-0_5: 0.125rem;
+    --space-1:   0.25rem;
+    --space-2:   0.5rem;
+    --space-3:   0.75rem;
+    --space-4:   1rem;
+    --space-5:   1.25rem;
+    --space-6:   1.5rem;
+    --space-8:   2rem;
+    --space-10:  2.5rem;
+    --space-12:  3rem;
+    --space-16:  4rem;
+    --space-24:  6rem;
+
+    /* Tailwind shadow stack — what Polar cards/inputs/buttons use */
+    --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05), 0 1px 3px 0 rgb(0 0 0 / 0.1);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
