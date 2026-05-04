@@ -681,7 +681,21 @@ html, body, #root { background: var(--background); }
 
 /* Larger modal for the question editor */
 .modal.modal-xl { max-width: 880px; }
+.modal.modal-lg { max-width: 640px; }
 .modal-body { overflow-x: hidden; }
+/* Ensure form fields shrink within grid/flex parents instead of overflowing. */
+.modal .field { min-width: 0; }
+.modal .field input, .modal .field select, .modal .field textarea {
+  width: 100%; min-width: 0; box-sizing: border-box;
+}
+/* Long monospace ids in helper text wrap rather than overflow. */
+.modal .field small,
+.modal .modal-body p,
+.modal .fw-import-mode-sub,
+.modal .fw-import-row {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
 
 /* Inline edit/remove actions on question rows */
 .qrow-actions {

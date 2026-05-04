@@ -1,8 +1,8 @@
 // Audit Accessibility — production app.
 // Single-page tablet/desktop app over the real 276-question framework.
 
-const { Icon, IC, STATUS_KEY, useAuditState, Pill, tally, exportCSV, exportJSON } = window.AppShared;
-const DB = window.AUDIT_DATA;
+const { Icon, IC, STATUS_KEY, useAuditState, Pill, tally, exportCSV, exportJSON } = /** @type {any} */ (window).AppShared;
+const DB = /** @type {any} */ (window).AUDIT_DATA;
 
 const DEFAULT_PROJECT = {
   client: "",
@@ -1244,7 +1244,7 @@ function ImportFrameworkDialog({ candidate, currentId, currentName, onConfirm, o
 
   return (
     <div className="modal-backdrop" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="modal">
+      <div className="modal modal-lg">
         <div className="modal-head">
           <h2>Importa framework</h2>
           <span style={{ flex: 1 }} />
