@@ -19,12 +19,18 @@
     catch (_) { return {}; }
   }
   function saveFrameworkStore(store) {
-    try { localStorage.setItem(FW_STORE_KEY, JSON.stringify(store)); } catch (_) {}
+    try {
+      localStorage.setItem(FW_STORE_KEY, JSON.stringify(store));
+      return true;
+    } catch (e) {
+      console.error("[audit] failed to persist framework store (likely localStorage quota):", e);
+      return false;
+    }
   }
   function saveFramework(id, framework) {
     const store = loadFrameworkStore();
     store[id] = framework;
-    saveFrameworkStore(store);
+    return saveFrameworkStore(store);
   }
   function resetFramework(id) {
     const store = loadFrameworkStore();
@@ -49,17 +55,26 @@
   const _store = loadFrameworkStore();
 
   // Compose the full framework list: built-ins (with valid overrides applied) + custom imports.
+  // If a stored entry fails validation we log loudly so the user sees in DevTools why
+  // the imported framework didn't take effect — silent fallback caused real confusion.
   const FRAMEWORKS = [];
   const _seen = new Set();
   for (let i = 0; i < BUILTIN.length; i++) {
     const id = BUILTIN[i].metadata.id || `fw_${i}`;
     const override = _store[id];
+    if (override && !isValidFramework(override)) {
+      console.warn(`[audit] framework override "${id}" rejected: missing/invalid metadata, legends or journeys structure. Using built-in instead.`, override);
+    }
     FRAMEWORKS.push(isValidFramework(override) ? override : BUILTIN[i]);
     _seen.add(id);
   }
   for (const id of Object.keys(_store)) {
     if (_seen.has(id)) continue;
-    if (isValidFramework(_store[id])) FRAMEWORKS.push(_store[id]);
+    if (isValidFramework(_store[id])) {
+      FRAMEWORKS.push(_store[id]);
+    } else {
+      console.warn(`[audit] custom framework "${id}" rejected: invalid structure, ignored.`, _store[id]);
+    }
   }
 
   const FRAMEWORKS_LIST = FRAMEWORKS.map((f, i) => ({
@@ -69,6 +84,16 @@
     custom: !isBuiltinFramework(f.metadata.id || `fw_${i}`),
     overridden: isBuiltinFramework(f.metadata.id || `fw_${i}`) && !!_store[f.metadata.id || `fw_${i}`],
   }));
+
+  // Set of every framework id currently selectable (built-ins + customs) — used by
+  // the import dialog to pick a non-colliding id when the user adds a new profile.
+  function allFrameworkIds() {
+    const ids = new Set();
+    for (let i = 0; i < BUILTIN.length; i++) ids.add(BUILTIN[i].metadata.id || `fw_${i}`);
+    const store = loadFrameworkStore();
+    for (const id of Object.keys(store)) ids.add(id);
+    return ids;
+  }
 
   const META_KEY = "audit_a11y_meta_v1";
   let _savedMeta = {};
@@ -260,7 +285,7 @@
     STANDARDS_CATALOG,
     persistence: {
       loadStates, saveStates, loadMeta, saveMeta,
-      saveFramework, resetFramework, isBuiltinFramework,
+      saveFramework, resetFramework, isBuiltinFramework, allFrameworkIds,
       STORAGE_KEY, META_KEY, FW_STORE_KEY,
     },
   };

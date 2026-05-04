@@ -318,6 +318,21 @@ textarea.notes:focus { outline: none; box-shadow: 0 0 0 var(--focus-ring-width) 
   position: relative;
 }
 .heatmap .hm-cell[data-na="true"] { background: repeating-linear-gradient(135deg, var(--background), var(--background) 4px, var(--muted) 4px, var(--muted) 5px); cursor: default; color: var(--muted-foreground);}
+.heatmap .hm-cell.hm-cell-empty { cursor: pointer; }
+.heatmap .hm-cell.hm-cell-empty:hover { outline: 2px dashed color-mix(in oklch, var(--primary) 60%, transparent); outline-offset: -2px; z-index: 2; color: var(--foreground); }
+.heatmap .hm-cell.hm-cell-empty[data-applicable="false"] { opacity: 0.55; }
+.heatmap .hm-cell.hm-cell-empty[data-applicable="false"]:hover { opacity: 1; }
+.heatmap .hm-cell .hm-add {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border-radius: 50%;
+  border: 1px dashed var(--border); color: var(--muted-foreground);
+  background: transparent;
+  transition: border-color 120ms, color 120ms, background 120ms;
+}
+.heatmap .hm-cell.hm-cell-empty:hover .hm-add {
+  border-color: var(--primary); color: var(--primary);
+  background: color-mix(in oklch, var(--primary) 10%, transparent);
+}
 .heatmap .hm-cell:hover:not([data-na="true"]) { outline: 2px solid var(--foreground); outline-offset: -2px; z-index: 2; }
 .hm-cell .hm-bar {
   position: absolute; left: 4px; right: 4px; bottom: 3px; height: 3px; border-radius: 2px;
@@ -743,6 +758,47 @@ html, body, #root { background: var(--background); }
 .qe-std-empty {
   padding: 16px 12px; font-size: 12px;
   color: var(--muted-foreground); text-align: center;
+}
+
+/* Framework import summary + radio cards */
+.fw-import-summary {
+  display: flex; flex-direction: column; gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid var(--border); border-radius: var(--radius-md);
+  background: color-mix(in oklch, var(--background) 50%, var(--card));
+  font-size: 13px;
+}
+.fw-import-row {
+  display: flex; align-items: baseline; gap: 10px;
+}
+.fw-import-label {
+  flex-shrink: 0; width: 80px;
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--muted-foreground); font-weight: 600;
+}
+.fw-import-modes {
+  display: flex; flex-direction: column; gap: 8px;
+}
+.fw-import-mode {
+  display: flex; gap: 10px; padding: 12px;
+  border: 1px solid var(--border); border-radius: var(--radius-md);
+  cursor: pointer;
+  background: var(--card);
+}
+.fw-import-mode:hover { background: var(--accent); }
+.fw-import-mode[data-active="true"] {
+  border-color: var(--primary);
+  background: color-mix(in oklch, var(--primary) 8%, var(--card));
+}
+.fw-import-mode input { margin-top: 3px; flex-shrink: 0; }
+.fw-import-mode-h { font-size: 13px; font-weight: 600; color: var(--foreground); margin-bottom: 2px; }
+.fw-import-mode-sub { font-size: 12px; color: var(--muted-foreground); line-height: 1.45; }
+.fw-import-mode-fields {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  margin-top: 10px;
+}
+@media (max-width: 540px) {
+  .fw-import-mode-fields { grid-template-columns: 1fr; }
 }
 
 /* Tag editor */

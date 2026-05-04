@@ -43,6 +43,8 @@ function App() {
   const [editingQ, setEditingQ] = React.useState(null); // { question, isNew, prefill }
   const [removingQ, setRemovingQ] = React.useState(null);
   const [showFwReset, setShowFwReset] = React.useState(false);
+  const [showFwExport, setShowFwExport] = React.useState(false);
+  const [pendingFwImport, setPendingFwImport] = React.useState(null); // candidate framework JSON
 
   const cellQuestions = React.useMemo(() => {
     return DB.QUESTIONS.filter(q =>
@@ -125,40 +127,85 @@ function App() {
       F.journeys[q.journey].questions = F.journeys[q.journey].questions.filter(x => x.id !== q.id);
     });
   };
-  const onExportFramework = () => {
-    const F = DB.FRAMEWORK;
-    const date = new Date().toISOString().slice(0,10);
-    const slug = (F.metadata.id || "framework").toLowerCase().replace(/\s+/g, "-");
+  const onExportFramework = () => setShowFwExport(true);
+  const doExportFramework = ({ id, name_it, version, date }) => {
+    const F = JSON.parse(JSON.stringify(DB.FRAMEWORK));
+    F.metadata = {
+      ...F.metadata,
+      id,
+      name_it,
+      version,
+      date,
+    };
+    const fileSlug = `${slugify(name_it)}_v${slugify(version)}`;
     window.AppShared.downloadBlob(
-      `audit-a11y-framework_${slug}_v${F.metadata.version || "1"}_${date}.json`,
+      `audit-a11y-framework_${fileSlug}_${date}.json`,
       JSON.stringify(F, null, 2),
       "application/json",
     );
+    // Promote: also persist the new metadata as the active framework, so future
+    // audit JSON exports stamp the matching framework_version and re-importing
+    // framework + audit lines up without a version mismatch.
+    const ok = DB.persistence.saveFramework(id, F);
+    if (!ok) {
+      alert("Framework esportato, ma impossibile aggiornare la copia attiva (storage pieno).");
+      setShowFwExport(false);
+      return;
+    }
+    const meta = DB.persistence.loadMeta();
+    DB.persistence.saveMeta({ ...meta, framework_id: id });
+    setShowFwExport(false);
+    // Reload so DB.AUDIT_META and the rest of the app pick up the new metadata.
+    location.reload();
   };
   const onImportFramework = (file) => {
     const reader = new FileReader();
     reader.onload = () => {
+      let j;
       try {
-        const j = JSON.parse(reader.result);
-        if (!j?.metadata?.id || !j.journeys || !j.legends) {
-          alert("File non valido: deve contenere metadata.id, journeys e legends.");
-          return;
-        }
-        const replacingCurrent = j.metadata.id === DB.FRAMEWORK_ID;
-        const message = replacingCurrent
-          ? `Sostituire il framework corrente "${DB.AUDIT_META.framework_name}" con quello importato?`
-          : `Importare il framework "${j.metadata.name_it || j.metadata.title_it}" e renderlo attivo? (id: ${j.metadata.id})`;
-        if (!confirm(message)) return;
-        if (!j.statistics) j.statistics = recomputeStatistics(j);
-        DB.persistence.saveFramework(j.metadata.id, j);
-        const meta = DB.persistence.loadMeta();
-        DB.persistence.saveMeta({ ...meta, framework_id: j.metadata.id });
-        location.reload();
-      } catch (_) {
-        alert("Impossibile leggere il JSON del framework.");
+        j = JSON.parse(reader.result);
+      } catch (e) {
+        alert("File non valido: JSON malformato.\n\n" + (e?.message || ""));
+        return;
       }
+      const missing = [];
+      if (!j?.metadata?.id) missing.push("metadata.id");
+      if (!j?.journeys?.current_account?.questions || !Array.isArray(j.journeys.current_account.questions)) missing.push("journeys.current_account.questions");
+      if (!j?.journeys?.mortgage?.questions || !Array.isArray(j.journeys.mortgage.questions)) missing.push("journeys.mortgage.questions");
+      if (!j?.journeys?.current_account?.macro_steps || !Array.isArray(j.journeys.current_account.macro_steps)) missing.push("journeys.current_account.macro_steps");
+      if (!j?.journeys?.mortgage?.macro_steps || !Array.isArray(j.journeys.mortgage.macro_steps)) missing.push("journeys.mortgage.macro_steps");
+      if (!j?.legends?.touchpoints_it) missing.push("legends.touchpoints_it");
+      if (missing.length) {
+        alert("File non valido: campi mancanti o malformati:\n• " + missing.join("\n• "));
+        return;
+      }
+      setPendingFwImport(j);
     };
     reader.readAsText(file);
+  };
+  const doImportFramework = ({ mode, newId, newName }) => {
+    const j = pendingFwImport;
+    if (!j) return;
+    // Clone so we don't mutate the candidate held in state.
+    const F = JSON.parse(JSON.stringify(j));
+    if (!F.statistics) F.statistics = recomputeStatistics(F);
+    let targetId;
+    if (mode === "replace") {
+      targetId = DB.FRAMEWORK_ID;
+      F.metadata = { ...F.metadata, id: targetId };
+    } else {
+      targetId = newId;
+      F.metadata = { ...F.metadata, id: newId, name_it: newName || F.metadata.name_it };
+    }
+    const ok = DB.persistence.saveFramework(targetId, F);
+    if (!ok) {
+      alert("Impossibile salvare il framework: lo storage del browser è pieno o non disponibile.");
+      return;
+    }
+    const meta = DB.persistence.loadMeta();
+    DB.persistence.saveMeta({ ...meta, framework_id: targetId });
+    setPendingFwImport(null);
+    location.reload();
   };
   const onResetFramework = () => setShowFwReset(true);
   const doResetFramework = () => {
@@ -169,25 +216,55 @@ function App() {
   const onImportJSON = (file) => {
     const reader = new FileReader();
     reader.onload = () => {
+      let j;
       try {
-        const j = JSON.parse(reader.result);
-        const next = {};
-        if (Array.isArray(j.results)) {
-          for (const r of j.results) {
-            if (!r.id) continue;
-            next[r.id] = {
-              conformity: r.conformity_assessment || null,
-              note: r.evidence_notes_it || "",
-              flag: !!r.follow_up,
-            };
-          }
-          DB.persistence.saveStates(next);
-          // rehydrate by reloading
-          location.reload();
-        } else {
-          alert("File non valido (manca 'results').");
-        }
-      } catch (_) { alert("Impossibile leggere il JSON."); }
+        j = JSON.parse(reader.result);
+      } catch (e) {
+        alert("File non valido: JSON malformato.\n\n" + (e?.message || ""));
+        return;
+      }
+      if (!Array.isArray(j.results)) {
+        alert("File non valido: campo 'results' assente o non è un array.");
+        return;
+      }
+      // Compute coverage against the current framework so we can warn the user
+      // before overwriting state that won't map back to anything.
+      const currentIds = new Set(DB.QUESTIONS.map(q => q.id));
+      let matched = 0, unknown = 0, withAnswer = 0;
+      const next = {};
+      for (const r of j.results) {
+        if (!r.id) continue;
+        const known = currentIds.has(r.id);
+        if (known) matched++; else unknown++;
+        if (r.conformity_assessment || r.evidence_notes_it || r.follow_up) withAnswer++;
+        next[r.id] = {
+          conformity: r.conformity_assessment || null,
+          note: r.evidence_notes_it || "",
+          flag: !!r.follow_up,
+        };
+      }
+      const fwMismatch = j.framework_version && j.framework_version !== DB.AUDIT_META.framework_version;
+      const lines = [
+        `Importazione audit:`,
+        `· ${j.results.length} risposte nel file (${withAnswer} compilate)`,
+        `· ${matched} corrispondono al framework corrente, ${unknown} non riconosciute`,
+      ];
+      if (fwMismatch) {
+        lines.push(`⚠ versione framework diversa: file v${j.framework_version} vs corrente v${DB.AUDIT_META.framework_version}`);
+      }
+      if (j.project) {
+        lines.push(`· verranno aggiornati anche i dettagli del progetto (${j.project.client || "—"})`);
+      }
+      lines.push("", "Procedere?");
+      if (!confirm(lines.join("\n"))) return;
+
+      DB.persistence.saveStates(next);
+      if (j.project && typeof j.project === "object") {
+        const meta = DB.persistence.loadMeta();
+        // Preserve the active framework_id (changing it would force another reload).
+        DB.persistence.saveMeta({ ...meta, ...j.project, framework_id: meta.framework_id || j.project.framework_id });
+      }
+      location.reload();
     };
     reader.readAsText(file);
   };
@@ -208,10 +285,9 @@ function App() {
         <TopBar view={view} onSetView={setView}
           activeJourney={activeJourney} filterStep={filterStep} filterTp={filterTp}
           onClearFilter={clearMapFilter}
-          activeQ={activeQ} search={search} setSearch={setSearch}
+          activeQ={activeQ}
           onExportCSV={onExportCSV} onExportJSON={onExportJSON} onImportJSON={onImportJSON}
           onExportFramework={onExportFramework}
-          onImportFramework={onImportFramework}
           onResetFramework={onResetFramework}
           frameworkIsBuiltin={DB.persistence.isBuiltinFramework(DB.FRAMEWORK_ID)}
         />
@@ -220,7 +296,9 @@ function App() {
           <MapView journey={activeJourney} states={states} hotOnly={hotOnly} setHotOnly={setHotOnly}
             onPickCell={(stepId, tpId) => { setFilterStep(stepId); setFilterTp(tpId); setView("list"); clearFilters(); }}
             onPickStep={(stepId) => { setFilterStep(stepId); setFilterTp(null); setView("list"); clearFilters(); }}
-            onPickTp={(tpId) => { setFilterStep(null); setFilterTp(tpId); setView("list"); clearFilters(); }} />
+            onPickTp={(tpId) => { setFilterStep(null); setFilterTp(tpId); setView("list"); clearFilters(); }}
+            onAddCell={(stepId, tpId) => setEditingQ({ question: null, isNew: true,
+              prefill: { journey: activeJourney, macro_step: stepId, touchpoint: tpId } })} />
         )}
 
         {view === "list" && (
@@ -262,7 +340,8 @@ function App() {
           DB.persistence.saveMeta(p);
           location.reload();
         }
-      }} onClose={() => setShowMeta(false)} required={!project.client} />}
+      }} onClose={() => setShowMeta(false)} required={!project.client}
+        onImportFramework={onImportFramework} />}
       {showReset && <ConfirmDialog title="Azzerare le risposte?" body="Verranno cancellate tutte le valutazioni, le note e i follow-up salvati su questo browser. L'azione non può essere annullata."
         confirmLabel="Azzera tutto" destructive
         onConfirm={() => { resetStates(); setShowReset(false); }} onCancel={() => setShowReset(false)} />}
@@ -287,6 +366,20 @@ function App() {
           body="Verranno scartate tutte le modifiche persistite a questo framework e ricaricata la versione di fabbrica."
           confirmLabel="Ripristina" destructive
           onConfirm={doResetFramework} onCancel={() => setShowFwReset(false)} />
+      )}
+      {showFwExport && (
+        <ExportFrameworkDialog
+          framework={DB.FRAMEWORK}
+          onConfirm={doExportFramework}
+          onClose={() => setShowFwExport(false)} />
+      )}
+      {pendingFwImport && (
+        <ImportFrameworkDialog
+          candidate={pendingFwImport}
+          currentId={DB.FRAMEWORK_ID}
+          currentName={DB.AUDIT_META.framework_name}
+          onConfirm={doImportFramework}
+          onClose={() => setPendingFwImport(null)} />
       )}
     </div>
   );
@@ -367,14 +460,13 @@ function Sidebar({ states, activeJourney, view, project, onSetView, onSetJourney
 }
 
 // ---------- Top bar ----------
-function TopBar({ view, activeJourney, filterStep, filterTp, onClearFilter, activeQ, search, setSearch,
+function TopBar({ view, activeJourney, filterStep, filterTp, onClearFilter, activeQ,
                   onExportCSV, onExportJSON, onImportJSON,
-                  onExportFramework, onImportFramework, onResetFramework, frameworkIsBuiltin }) {
+                  onExportFramework, onResetFramework, frameworkIsBuiltin }) {
   const journeyName = activeJourney === "current_account" ? "Conto corrente" : "Mutuo";
   const stepName = filterStep ? DB.MACRO_STEPS[activeJourney].find(s => s.id === filterStep)?.name : null;
   const tpName = filterTp ? DB.TOUCHPOINT_LABELS[filterTp] : null;
   const fileRef = React.useRef(null);
-  const fwFileRef = React.useRef(null);
   const [exportOpen, setExportOpen] = React.useState(false);
   React.useEffect(() => {
     if (!exportOpen) return;
@@ -404,6 +496,16 @@ function TopBar({ view, activeJourney, filterStep, filterTp, onClearFilter, acti
           <Icon d={IC.x} size={12} /> Rimuovi filtro mappa
         </button>
       )}
+      {/* Import is its own top-level button. Keeping the file input mounted at the
+          topbar level (not inside a dropdown) avoids losing the change event when
+          the menu unmounts before the native picker resolves. */}
+      <button className="btn" onClick={() => fileRef.current?.click()}
+        title="Importa risposte da JSON precedentemente esportato">
+        <Icon d={IC.upload} size={14} /> Importa
+      </button>
+      <input ref={fileRef} type="file" accept="application/json" style={{display:"none"}}
+        onChange={(e) => { const f = e.target.files?.[0]; if (f) onImportJSON(f); e.target.value = ""; }} />
+
       <div className="menu-wrap" onClick={(e) => e.stopPropagation()}>
         <button className="btn" data-variant="primary" onClick={() => setExportOpen(v => !v)}>
           <Icon d={IC.download} /> Esporta
@@ -411,6 +513,7 @@ function TopBar({ view, activeJourney, filterStep, filterTp, onClearFilter, acti
         </button>
         {exportOpen && (
           <div className="menu">
+            <div className="menu-label">Risposte audit</div>
             <button className="menu-item" onClick={() => { onExportCSV(); setExportOpen(false); }}>
               <Icon d={IC.doc} size={14} /> CSV (foglio di calcolo)
             </button>
@@ -418,21 +521,10 @@ function TopBar({ view, activeJourney, filterStep, filterTp, onClearFilter, acti
               <Icon d={IC.save} size={14} /> JSON (backup audit)
             </button>
             <div className="menu-sep" />
-            <button className="menu-item" onClick={() => { fileRef.current?.click(); setExportOpen(false); }}>
-              <Icon d={IC.upload} size={14} /> Importa risposte JSON…
-            </button>
-            <input ref={fileRef} type="file" accept="application/json" style={{display:"none"}}
-              onChange={(e) => { const f = e.target.files?.[0]; if (f) onImportJSON(f); e.target.value = ""; }} />
-            <div className="menu-sep" />
             <div className="menu-label">Framework</div>
             <button className="menu-item" onClick={() => { onExportFramework(); setExportOpen(false); }}>
               <Icon d={IC.download} size={14} /> Esporta framework
             </button>
-            <button className="menu-item" onClick={() => { fwFileRef.current?.click(); setExportOpen(false); }}>
-              <Icon d={IC.upload} size={14} /> Importa framework…
-            </button>
-            <input ref={fwFileRef} type="file" accept="application/json" style={{display:"none"}}
-              onChange={(e) => { const f = e.target.files?.[0]; if (f) onImportFramework(f); e.target.value = ""; }} />
             {frameworkIsBuiltin && (
               <button className="menu-item" onClick={() => { onResetFramework(); setExportOpen(false); }}>
                 <Icon d={IC.reset} size={14} /> Ripristina framework default
@@ -446,11 +538,17 @@ function TopBar({ view, activeJourney, filterStep, filterTp, onClearFilter, acti
 }
 
 // ---------- Map view ----------
-function MapView({ journey, states, hotOnly, setHotOnly, onPickCell, onPickStep, onPickTp }) {
+function MapView({ journey, states, hotOnly, setHotOnly, onPickCell, onPickStep, onPickTp, onAddCell }) {
   const steps = DB.MACRO_STEPS[journey];
   const tps = React.useMemo(() => {
-    return [...new Set(DB.QUESTIONS.filter(q => q.journey === journey).map(q => q.touchpoint))];
-  }, [journey]);
+    // Show all touchpoints applicable to any macro-step in this journey, plus any
+    // touchpoint that already has questions (defensive, in case the framework
+    // has answers in cells whose step descriptor doesn't list the touchpoint).
+    const set = new Set();
+    for (const s of steps) for (const tp of (s.applicable_touchpoints || [])) set.add(tp);
+    for (const q of DB.QUESTIONS) if (q.journey === journey) set.add(q.touchpoint);
+    return [...set];
+  }, [journey, steps]);
 
   const cellMap = React.useMemo(() => {
     const m = {};
@@ -550,7 +648,23 @@ function MapView({ journey, states, hotOnly, setHotOnly, onPickCell, onPickStep,
             {steps.map(s => {
               const cell = cellMap[tp][s.id];
               const na = cell.qs.length === 0;
-              if (na) return <div key={s.id} className="hm-cell" data-na="true">·</div>;
+              if (na) {
+                const applicable = (s.applicable_touchpoints || []).includes(tp);
+                return (
+                  <div key={s.id}
+                    className="hm-cell hm-cell-empty"
+                    data-na="true"
+                    data-applicable={applicable ? "true" : "false"}
+                    onClick={onAddCell ? () => onAddCell(s.id, tp) : undefined}
+                    title={onAddCell
+                      ? `Nessuna domanda${applicable ? "" : " (touchpoint non standard per questo macro-step)"} · click per aggiungere`
+                      : "Nessuna domanda"}>
+                    {onAddCell
+                      ? <span className="hm-add"><Icon d={IC.plus} size={12}/></span>
+                      : "·"}
+                  </div>
+                );
+              }
               const t = cell.t;
               const paint = cellPaint(t);
               const pct = t.total > 0 ? Math.round((t.full / t.total) * 100) : null;
@@ -917,10 +1031,11 @@ function QuestionView({ q, state, onUpdate, navIdx, navTotal, onPrev, onNext, on
 }
 
 // ---------- Project meta dialog ----------
-function MetaDialog({ project, onSave, onClose, required }) {
+function MetaDialog({ project, onSave, onClose, required, onImportFramework }) {
   const [draft, setDraft] = React.useState({ ...project, framework_id: project.framework_id || DB.FRAMEWORK_ID });
   const valid = !!draft.client?.trim() && !!draft.framework_id;
   const frameworks = DB.FRAMEWORKS_LIST || [];
+  const fwFileRef = React.useRef(null);
   return (
     <div className="modal-backdrop" onClick={(e) => { if (!required && e.target === e.currentTarget) onClose(); }}>
       <div className="modal">
@@ -935,19 +1050,32 @@ function MetaDialog({ project, onSave, onClose, required }) {
             <input value={draft.client} onChange={(e) => setDraft({...draft, client: e.target.value})}
               placeholder="Es. Banca Aurora Romagna" autoFocus />
           </label>
-          <label className="field">
+          <div className="field">
             <span>Framework</span>
-            <select value={draft.framework_id} onChange={(e) => setDraft({...draft, framework_id: e.target.value})}>
-              {frameworks.map(f => (
-                <option key={f.id} value={f.id}>{f.name}{f.version ? ` · v${f.version}` : ""}</option>
-              ))}
-            </select>
+            <div style={{ display: "flex", gap: 8, alignItems: "stretch" }}>
+              <select style={{ flex: 1 }} value={draft.framework_id} onChange={(e) => setDraft({...draft, framework_id: e.target.value})}>
+                {frameworks.map(f => (
+                  <option key={f.id} value={f.id}>{f.name}{f.version ? ` · v${f.version}` : ""}{f.overridden ? " · modificato" : ""}{f.custom ? " · importato" : ""}</option>
+                ))}
+              </select>
+              {onImportFramework && (
+                <>
+                  <button type="button" className="btn"
+                    onClick={() => fwFileRef.current?.click()}
+                    title="Importa un framework da file JSON">
+                    <Icon d={IC.upload} size={14}/> Importa…
+                  </button>
+                  <input ref={fwFileRef} type="file" accept="application/json" style={{ display: "none" }}
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) onImportFramework(f); e.target.value = ""; }} />
+                </>
+              )}
+            </div>
             {draft.framework_id !== DB.FRAMEWORK_ID && (
               <small style={{color:"var(--muted-foreground)", marginTop:4}}>
                 Cambiando framework la pagina verrà ricaricata.
               </small>
             )}
-          </label>
+          </div>
           <label className="field">
             <span>Data visita</span>
             <input type="date" value={draft.visit_date}
@@ -984,6 +1112,212 @@ function ConfirmDialog({ title, body, confirmLabel, destructive, onConfirm, onCa
         <div className="modal-foot">
           <button className="btn" onClick={onCancel}>Annulla</button>
           <button className="btn" data-variant={destructive ? "danger" : "primary"} onClick={onConfirm}>{confirmLabel}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------- Framework export/import dialogs ----------
+
+const slugify = (s) =>
+  String(s || "")
+    .toLowerCase().normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 60) || "framework";
+
+// Suggest the next version: bump the trailing numeric segment when present, else
+// append "-edit". e.g. "1.0.0" -> "1.0.1", "1.2" -> "1.3", "1" -> "2", "v1" -> "v1-edit".
+const bumpVersion = (v) => {
+  const s = String(v || "").trim();
+  if (!s) return "1.0.1";
+  const m = s.match(/^(.*?)(\d+)(\D*)$/);
+  if (!m) return s + "-edit";
+  return `${m[1]}${parseInt(m[2], 10) + 1}${m[3]}`;
+};
+
+function ExportFrameworkDialog({ framework, onConfirm, onClose }) {
+  const cur = framework.metadata || {};
+  const [name, setName] = React.useState(cur.name_it || cur.title_it || "Framework");
+  const [version, setVersion] = React.useState(bumpVersion(cur.version));
+  const [keepId, setKeepId] = React.useState(false);
+  const derivedId = `${slugify(name)}_v${slugify(version)}`;
+  const id = keepId ? cur.id : derivedId;
+  const date = new Date().toISOString().slice(0, 10);
+
+  const valid = !!name.trim() && !!version.trim() && !!id.trim();
+
+  const submit = () => {
+    if (!valid) return;
+    onConfirm({
+      id: id.trim(),
+      name_it: name.trim(),
+      version: version.trim(),
+      date,
+    });
+  };
+
+  return (
+    <div className="modal-backdrop" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="modal">
+        <div className="modal-head">
+          <h2>Esporta framework</h2>
+          <span style={{ flex: 1 }} />
+          <button className="btn" data-variant="ghost" onClick={onClose}><Icon d={IC.x} size={14}/></button>
+        </div>
+        <div className="modal-body">
+          <p style={{ margin: 0, fontSize: 12, color: "var(--muted-foreground)", lineHeight: 1.5 }}>
+            Imposta nome e versione dello snapshot. <strong>Il framework attivo verrà aggiornato con questi metadati</strong>, così le successive esportazioni delle risposte (CSV/JSON) registreranno la stessa versione e re-importando in seguito non ci sarà disallineamento.
+            <br/>
+            L'<strong>id</strong> identifica il framework: usandone uno diverso dal corrente verrà creato un framework affiancato (selezionabile dai Dettagli progetto); mantenendo lo stesso id, il corrente verrà aggiornato in place.
+          </p>
+          <label className="field">
+            <span>Nome</span>
+            <input value={name} onChange={(e) => setName(e.target.value)} autoFocus />
+          </label>
+          <label className="field">
+            <span>Versione</span>
+            <input value={version} onChange={(e) => setVersion(e.target.value)}
+              placeholder="es. 1.0.1" />
+          </label>
+          <label className="field">
+            <span>ID</span>
+            <input value={id} disabled={!keepId}
+              onChange={() => {}} style={{ fontFamily: "var(--font-family-mono)" }} />
+          </label>
+          <label style={{ display: "flex", gap: 6, alignItems: "center", fontSize: 12, color: "var(--muted-foreground)" }}>
+            <input type="checkbox" checked={keepId} onChange={(e) => setKeepId(e.target.checked)} />
+            Mantieni l'id corrente <code style={{ fontFamily: "var(--font-family-mono)" }}>{cur.id}</code> (re-importando sovrascriverà)
+          </label>
+        </div>
+        <div className="modal-foot">
+          <button className="btn" data-variant="ghost" onClick={onClose}>Annulla</button>
+          <button className="btn" data-variant="primary" disabled={!valid} onClick={submit}>
+            <Icon d={IC.download} size={14}/> Scarica JSON
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Build a unique id by appending _2, _3, ... when needed.
+const uniqueFrameworkId = (base, taken) => {
+  const b = slugify(base) || "framework";
+  if (!taken.has(b)) return b;
+  let n = 2;
+  while (taken.has(`${b}_${n}`)) n++;
+  return `${b}_${n}`;
+};
+
+function ImportFrameworkDialog({ candidate, currentId, currentName, onConfirm, onClose }) {
+  const meta = candidate.metadata || {};
+  const ccCount = candidate.journeys?.current_account?.questions?.length || 0;
+  const muCount = candidate.journeys?.mortgage?.questions?.length || 0;
+
+  // The set of ids already selectable in this app — both built-ins and stored customs.
+  const takenIds = React.useMemo(
+    () => DB.persistence.allFrameworkIds(),
+    []
+  );
+
+  // Default mode = create a new profile. The user can switch to replace if desired.
+  const [mode, setMode] = React.useState("asnew"); // 'asnew' | 'replace'
+  // Editable name + id for the "new profile" mode. Default to a collision-safe id.
+  const [name, setName] = React.useState(meta.name_it || meta.title_it || "Framework importato");
+  const initialId = uniqueFrameworkId(meta.id || meta.name_it || "framework", takenIds);
+  const [newId, setNewId] = React.useState(initialId);
+  const idCollides = mode === "asnew" && takenIds.has(newId.trim());
+
+  const valid = mode === "replace" || (!!name.trim() && !!newId.trim() && !idCollides);
+
+  const submit = () => {
+    if (!valid) return;
+    onConfirm({
+      mode,
+      newId: newId.trim(),
+      newName: name.trim(),
+    });
+  };
+
+  return (
+    <div className="modal-backdrop" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="modal">
+        <div className="modal-head">
+          <h2>Importa framework</h2>
+          <span style={{ flex: 1 }} />
+          <button className="btn" data-variant="ghost" onClick={onClose}><Icon d={IC.x} size={14}/></button>
+        </div>
+        <div className="modal-body">
+          <div className="fw-import-summary">
+            <div className="fw-import-row">
+              <span className="fw-import-label">Nome</span>
+              <span>{meta.name_it || meta.title_it || "—"}</span>
+            </div>
+            <div className="fw-import-row">
+              <span className="fw-import-label">Versione</span>
+              <span>{meta.version || "—"}</span>
+            </div>
+            <div className="fw-import-row">
+              <span className="fw-import-label">ID nel file</span>
+              <code style={{ fontFamily: "var(--font-family-mono)", fontSize: 12 }}>{meta.id || "—"}</code>
+              {takenIds.has(meta.id) && (
+                <span style={{ fontSize: 11, color: "var(--warning)", fontWeight: 600 }}>già usato</span>
+              )}
+            </div>
+            <div className="fw-import-row">
+              <span className="fw-import-label">Domande</span>
+              <span>{ccCount + muCount} <span style={{ color: "var(--muted-foreground)" }}>({ccCount} CC + {muCount} Mutuo)</span></span>
+            </div>
+          </div>
+
+          <div className="fw-import-modes">
+            <label className="fw-import-mode" data-active={mode === "asnew"}>
+              <input type="radio" name="mode" checked={mode === "asnew"} onChange={() => setMode("asnew")} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div className="fw-import-mode-h">Aggiungi come nuovo framework</div>
+                <div className="fw-import-mode-sub">
+                  Crea un framework affiancato a quelli esistenti, selezionabile dai Dettagli progetto. Diventa attivo subito.
+                </div>
+                {mode === "asnew" && (
+                  <div className="fw-import-mode-fields">
+                    <label className="field">
+                      <span>Nome del framework</span>
+                      <input value={name} onChange={(e) => setName(e.target.value)} />
+                    </label>
+                    <label className="field">
+                      <span>ID univoco</span>
+                      <input value={newId}
+                        onChange={(e) => setNewId(e.target.value)}
+                        style={{ fontFamily: "var(--font-family-mono)" }} />
+                      {idCollides
+                        ? <small style={{ color: "var(--destructive)", marginTop: 4 }}>ID già usato — modificalo o passa a "Sostituisci".</small>
+                        : <small style={{ color: "var(--muted-foreground)", marginTop: 4 }}>Verrà aggiunto come nuovo framework (id originale: <code style={{ fontFamily: "var(--font-family-mono)" }}>{meta.id || "—"}</code>).</small>
+                      }
+                    </label>
+                  </div>
+                )}
+              </div>
+            </label>
+
+            <label className="fw-import-mode" data-active={mode === "replace"}>
+              <input type="radio" name="mode" checked={mode === "replace"} onChange={() => setMode("replace")} />
+              <div>
+                <div className="fw-import-mode-h">Sostituisci framework corrente</div>
+                <div className="fw-import-mode-sub">
+                  Salva con id <code style={{ fontFamily: "var(--font-family-mono)" }}>{currentId}</code> ({currentName}). Sovrascrive le modifiche correnti, non aggiunge un nuovo framework.
+                </div>
+              </div>
+            </label>
+          </div>
+        </div>
+        <div className="modal-foot">
+          <button className="btn" data-variant="ghost" onClick={onClose}>Annulla</button>
+          <button className="btn" data-variant="primary" disabled={!valid} onClick={submit}>
+            Importa e ricarica
+          </button>
         </div>
       </div>
     </div>
