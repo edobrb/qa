@@ -39,6 +39,10 @@ function App() {
   const [showMeta, setShowMeta] = React.useState(!project.client);
   // Reset confirm
   const [showReset, setShowReset] = React.useState(false);
+  // Framework editor dialog
+  const [editingQ, setEditingQ] = React.useState(null); // { question, isNew, prefill }
+  const [removingQ, setRemovingQ] = React.useState(null);
+  const [showFwReset, setShowFwReset] = React.useState(false);
 
   const cellQuestions = React.useMemo(() => {
     return DB.QUESTIONS.filter(q =>
@@ -90,6 +94,78 @@ function App() {
 
   const onExportCSV = () => exportCSV(DB.QUESTIONS, states, project);
   const onExportJSON = () => exportJSON(DB.QUESTIONS, states, project);
+
+  // ----- Framework editing -----
+  const commitFramework = (mutator) => {
+    const next = JSON.parse(JSON.stringify(DB.FRAMEWORK));
+    mutator(next);
+    next.statistics = recomputeStatistics(next);
+    DB.persistence.saveFramework(next.metadata.id, next);
+    location.reload();
+  };
+  const onSaveQuestion = (saved, isNew) => {
+    commitFramework((F) => {
+      const list = F.journeys[saved.journey].questions;
+      if (isNew) {
+        list.push(saved);
+      } else {
+        const idx = list.findIndex(x => x.id === saved.id);
+        if (idx >= 0) list[idx] = saved;
+        else list.push(saved);
+        // If the journey changed during edit, drop the old entry from the other side.
+        const otherJ = saved.journey === "current_account" ? "mortgage" : "current_account";
+        F.journeys[otherJ].questions = F.journeys[otherJ].questions.filter(x => x.id !== saved.id);
+      }
+    });
+  };
+  const onConfirmRemoveQuestion = () => {
+    const q = removingQ;
+    if (!q) return;
+    commitFramework((F) => {
+      F.journeys[q.journey].questions = F.journeys[q.journey].questions.filter(x => x.id !== q.id);
+    });
+  };
+  const onExportFramework = () => {
+    const F = DB.FRAMEWORK;
+    const date = new Date().toISOString().slice(0,10);
+    const slug = (F.metadata.id || "framework").toLowerCase().replace(/\s+/g, "-");
+    window.AppShared.downloadBlob(
+      `audit-a11y-framework_${slug}_v${F.metadata.version || "1"}_${date}.json`,
+      JSON.stringify(F, null, 2),
+      "application/json",
+    );
+  };
+  const onImportFramework = (file) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const j = JSON.parse(reader.result);
+        if (!j?.metadata?.id || !j.journeys || !j.legends) {
+          alert("File non valido: deve contenere metadata.id, journeys e legends.");
+          return;
+        }
+        const replacingCurrent = j.metadata.id === DB.FRAMEWORK_ID;
+        const message = replacingCurrent
+          ? `Sostituire il framework corrente "${DB.AUDIT_META.framework_name}" con quello importato?`
+          : `Importare il framework "${j.metadata.name_it || j.metadata.title_it}" e renderlo attivo? (id: ${j.metadata.id})`;
+        if (!confirm(message)) return;
+        if (!j.statistics) j.statistics = recomputeStatistics(j);
+        DB.persistence.saveFramework(j.metadata.id, j);
+        const meta = DB.persistence.loadMeta();
+        DB.persistence.saveMeta({ ...meta, framework_id: j.metadata.id });
+        location.reload();
+      } catch (_) {
+        alert("Impossibile leggere il JSON del framework.");
+      }
+    };
+    reader.readAsText(file);
+  };
+  const onResetFramework = () => setShowFwReset(true);
+  const doResetFramework = () => {
+    DB.persistence.resetFramework(DB.FRAMEWORK_ID);
+    location.reload();
+  };
+
   const onImportJSON = (file) => {
     const reader = new FileReader();
     reader.onload = () => {
@@ -134,6 +210,10 @@ function App() {
           onClearFilter={clearMapFilter}
           activeQ={activeQ} search={search} setSearch={setSearch}
           onExportCSV={onExportCSV} onExportJSON={onExportJSON} onImportJSON={onImportJSON}
+          onExportFramework={onExportFramework}
+          onImportFramework={onImportFramework}
+          onResetFramework={onResetFramework}
+          frameworkIsBuiltin={DB.persistence.isBuiltinFramework(DB.FRAMEWORK_ID)}
         />
 
         {view === "map" && (
@@ -153,7 +233,11 @@ function App() {
             fCat={fCat} setFCat={setFCat}
             onClearFilters={clearFilters}
             onClearMapFilter={clearMapFilter}
-            onOpen={(id) => { setActiveQid(id); setView("question"); }} />
+            onOpen={(id) => { setActiveQid(id); setView("question"); }}
+            onAddQuestion={() => setEditingQ({ question: null, isNew: true,
+              prefill: { journey: activeJourney, macro_step: filterStep, touchpoint: filterTp } })}
+            onEditQuestion={(q) => setEditingQ({ question: q, isNew: false })}
+            onRemoveQuestion={(q) => setRemovingQ(q)} />
         )}
 
         {view === "question" && activeQ && (
@@ -162,7 +246,9 @@ function App() {
             navIdx={navIdx} navTotal={filteredList.length}
             onPrev={() => { if (navIdx > 0) setActiveQid(filteredList[navIdx - 1].id); }}
             onNext={() => { if (navIdx < filteredList.length - 1) setActiveQid(filteredList[navIdx + 1].id); }}
-            onBack={() => setView("list")} />
+            onBack={() => setView("list")}
+            onEdit={() => setEditingQ({ question: activeQ, isNew: false })}
+            onRemove={() => setRemovingQ(activeQ)} />
         )}
 
         {view === "dashboard" && <window.DashboardView states={states} project={project} />}
@@ -180,6 +266,28 @@ function App() {
       {showReset && <ConfirmDialog title="Azzerare le risposte?" body="Verranno cancellate tutte le valutazioni, le note e i follow-up salvati su questo browser. L'azione non può essere annullata."
         confirmLabel="Azzera tutto" destructive
         onConfirm={() => { resetStates(); setShowReset(false); }} onCancel={() => setShowReset(false)} />}
+      {editingQ && (
+        <QuestionEditorDialog
+          framework={DB.FRAMEWORK}
+          existingIds={new Set(DB.QUESTIONS.map(x => x.id))}
+          initial={editingQ.question}
+          isNew={editingQ.isNew}
+          prefill={editingQ.prefill}
+          onSave={(q) => { onSaveQuestion(q, editingQ.isNew); }}
+          onClose={() => setEditingQ(null)} />
+      )}
+      {removingQ && (
+        <ConfirmDialog title="Rimuovere la domanda?"
+          body={`${removingQ.id} verrà eliminata dal framework. Le risposte salvate per questo ID resteranno nel localStorage ma non saranno più visibili. La pagina verrà ricaricata.`}
+          confirmLabel="Rimuovi" destructive
+          onConfirm={onConfirmRemoveQuestion} onCancel={() => setRemovingQ(null)} />
+      )}
+      {showFwReset && (
+        <ConfirmDialog title="Ripristinare il framework predefinito?"
+          body="Verranno scartate tutte le modifiche persistite a questo framework e ricaricata la versione di fabbrica."
+          confirmLabel="Ripristina" destructive
+          onConfirm={doResetFramework} onCancel={() => setShowFwReset(false)} />
+      )}
     </div>
   );
 }
@@ -259,11 +367,14 @@ function Sidebar({ states, activeJourney, view, project, onSetView, onSetJourney
 }
 
 // ---------- Top bar ----------
-function TopBar({ view, activeJourney, filterStep, filterTp, onClearFilter, activeQ, search, setSearch, onExportCSV, onExportJSON, onImportJSON }) {
+function TopBar({ view, activeJourney, filterStep, filterTp, onClearFilter, activeQ, search, setSearch,
+                  onExportCSV, onExportJSON, onImportJSON,
+                  onExportFramework, onImportFramework, onResetFramework, frameworkIsBuiltin }) {
   const journeyName = activeJourney === "current_account" ? "Conto corrente" : "Mutuo";
   const stepName = filterStep ? DB.MACRO_STEPS[activeJourney].find(s => s.id === filterStep)?.name : null;
   const tpName = filterTp ? DB.TOUCHPOINT_LABELS[filterTp] : null;
   const fileRef = React.useRef(null);
+  const fwFileRef = React.useRef(null);
   const [exportOpen, setExportOpen] = React.useState(false);
   React.useEffect(() => {
     if (!exportOpen) return;
@@ -308,10 +419,25 @@ function TopBar({ view, activeJourney, filterStep, filterTp, onClearFilter, acti
             </button>
             <div className="menu-sep" />
             <button className="menu-item" onClick={() => { fileRef.current?.click(); setExportOpen(false); }}>
-              <Icon d={IC.upload} size={14} /> Importa JSON…
+              <Icon d={IC.upload} size={14} /> Importa risposte JSON…
             </button>
             <input ref={fileRef} type="file" accept="application/json" style={{display:"none"}}
               onChange={(e) => { const f = e.target.files?.[0]; if (f) onImportJSON(f); e.target.value = ""; }} />
+            <div className="menu-sep" />
+            <div className="menu-label">Framework</div>
+            <button className="menu-item" onClick={() => { onExportFramework(); setExportOpen(false); }}>
+              <Icon d={IC.download} size={14} /> Esporta framework
+            </button>
+            <button className="menu-item" onClick={() => { fwFileRef.current?.click(); setExportOpen(false); }}>
+              <Icon d={IC.upload} size={14} /> Importa framework…
+            </button>
+            <input ref={fwFileRef} type="file" accept="application/json" style={{display:"none"}}
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) onImportFramework(f); e.target.value = ""; }} />
+            {frameworkIsBuiltin && (
+              <button className="menu-item" onClick={() => { onResetFramework(); setExportOpen(false); }}>
+                <Icon d={IC.reset} size={14} /> Ripristina framework default
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -498,7 +624,8 @@ function FilterChips({ label, value, onChange, options }) {
 
 // ---------- List view ----------
 function QListView({ all, questions, states, journey, filterStep, filterTp,
-                    search, setSearch, fStatus, setFStatus, fPour, setFPour, fCat, setFCat, onClearFilters, onClearMapFilter, onOpen }) {
+                    search, setSearch, fStatus, setFStatus, fPour, setFPour, fCat, setFCat, onClearFilters, onClearMapFilter, onOpen,
+                    onAddQuestion, onEditQuestion, onRemoveQuestion }) {
   const allTally = tally(all, states);
 
   const sCounts = React.useMemo(() => {
@@ -539,6 +666,11 @@ function QListView({ all, questions, states, journey, filterStep, filterTp,
         {(filterStep || filterTp) && (
           <button className="btn" data-variant="ghost" onClick={onClearMapFilter}>
             <Icon d={IC.x} size={12} /> Rimuovi filtro mappa
+          </button>
+        )}
+        {onAddQuestion && (
+          <button className="btn" data-variant="primary" onClick={onAddQuestion}>
+            <Icon d={IC.plus} size={14} /> Aggiungi domanda
           </button>
         )}
       </div>
@@ -608,6 +740,7 @@ function QListView({ all, questions, states, journey, filterStep, filterTp,
                 </div>
                 {items.map(q => {
                   const s = states[q.id] || {};
+                  const stop = (fn) => (e) => { e.stopPropagation(); fn(); };
                   return (
                     <div key={q.id} className="qrow" onClick={() => onOpen(q.id)}>
                       <div className="qrow-h">
@@ -619,6 +752,22 @@ function QListView({ all, questions, states, journey, filterStep, filterTp,
                         <span style={{ flex: 1 }} />
                         <span className="facet">{DB.TOUCHPOINT_SHORT[q.touchpoint] || q.touchpoint}</span>
                         <span className="facet">{DB.POUR_LABEL[q.pour_principle]}</span>
+                        {(onEditQuestion || onRemoveQuestion) && (
+                          <span className="qrow-actions">
+                            {onEditQuestion && (
+                              <button className="qrow-action" title="Modifica struttura della domanda"
+                                onClick={stop(() => onEditQuestion(q))}>
+                                <Icon d={IC.edit} size={12}/>
+                              </button>
+                            )}
+                            {onRemoveQuestion && (
+                              <button className="qrow-action qrow-action-danger" title="Rimuovi dal framework"
+                                onClick={stop(() => onRemoveQuestion(q))}>
+                                <Icon d={IC.trash} size={12}/>
+                              </button>
+                            )}
+                          </span>
+                        )}
                       </div>
                       <div className="qrow-text">{q.question_it}</div>
                       {s.note && <div className="qrow-note">↳ {s.note}</div>}
@@ -635,7 +784,7 @@ function QListView({ all, questions, states, journey, filterStep, filterTp,
 }
 
 // ---------- Question view ----------
-function QuestionView({ q, state, onUpdate, navIdx, navTotal, onPrev, onNext, onBack }) {
+function QuestionView({ q, state, onUpdate, navIdx, navTotal, onPrev, onNext, onBack, onEdit, onRemove }) {
   const conf = state.conformity;
   const isFlag = !!state.flag;
   const isReview = conf === "to_review";
@@ -644,9 +793,23 @@ function QuestionView({ q, state, onUpdate, navIdx, navTotal, onPrev, onNext, on
   return (
     <div className="qview">
       <div className="q-main">
-        <button className="btn" data-variant="ghost" onClick={onBack} style={{ marginBottom: 16 }}>
-          <Icon d={IC.back} size={14} /> Torna alla lista
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 16 }}>
+          <button className="btn" data-variant="ghost" onClick={onBack}>
+            <Icon d={IC.back} size={14} /> Torna alla lista
+          </button>
+          <span style={{ flex: 1 }} />
+          {onEdit && (
+            <button className="btn" data-variant="ghost" onClick={onEdit} title="Modifica struttura della domanda">
+              <Icon d={IC.edit} size={14} /> Modifica struttura
+            </button>
+          )}
+          {onRemove && (
+            <button className="btn" data-variant="ghost" onClick={onRemove} title="Rimuovi dal framework"
+              style={{ color: "var(--destructive)" }}>
+              <Icon d={IC.trash} size={14} /> Rimuovi
+            </button>
+          )}
+        </div>
         <div className="q-meta">
           <span className="q-id">{q.id}</span>
           <Pill status={STATUS_KEY(conf)}>{conf ? DB.CONF_LEVELS[conf].label : "Da compilare"}</Pill>
@@ -821,6 +984,531 @@ function ConfirmDialog({ title, body, confirmLabel, destructive, onConfirm, onCa
         <div className="modal-foot">
           <button className="btn" onClick={onCancel}>Annulla</button>
           <button className="btn" data-variant={destructive ? "danger" : "primary"} onClick={onConfirm}>{confirmLabel}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------- Framework editing helpers ----------
+
+const JOURNEY_PREFIX = { current_account: "CC", mortgage: "MU" };
+const POUR_OPTIONS = [
+  { value: "perceivable", label: "Percepibile" },
+  { value: "operable", label: "Utilizzabile" },
+  { value: "understandable", label: "Comprensibile" },
+  { value: "robust", label: "Robusto" },
+];
+const USER_CAT_OPTIONS = [
+  { value: "visual", label: "Visiva" },
+  { value: "auditory", label: "Uditiva" },
+  { value: "motor", label: "Motoria" },
+  { value: "cognitive", label: "Cognitiva" },
+  { value: "elderly_temporary_situational", label: "Anziani / temp." },
+];
+
+// Heuristic to suggest a POUR principle from selected user categories.
+const POUR_FROM_CATS = (cats) => {
+  if (!cats || !cats.length) return "perceivable";
+  if (cats.includes("visual") && cats.length === 1) return "perceivable";
+  if (cats.includes("motor")) return "operable";
+  if (cats.includes("cognitive")) return "understandable";
+  if (cats.includes("auditory")) return "perceivable";
+  return "perceivable";
+};
+
+const buildQuestionId = (existingIds, journey, macroStep, touchpoint) => {
+  const jp = JOURNEY_PREFIX[journey];
+  const sp = DB.STEP_CODES[macroStep] || macroStep.slice(0,3).toUpperCase();
+  const tp = DB.TP_CODE[touchpoint] || touchpoint.slice(0,3).toUpperCase();
+  const prefix = `${jp}-${sp}-${tp}-`;
+  let max = 0;
+  for (const id of existingIds) {
+    if (id.startsWith(prefix)) {
+      const n = parseInt(id.slice(prefix.length), 10);
+      if (Number.isFinite(n) && n > max) max = n;
+    }
+  }
+  return `${prefix}${String(max + 1).padStart(3, "0")}`;
+};
+
+const categoriesPhrase = (cats, legends) => {
+  const labels = (cats || []).map(c => legends.user_categories_it[c]).filter(Boolean);
+  if (!labels.length) return "tutti gli utenti";
+  if (labels.length === 1) return `utenti ${labels[0]}`;
+  if (labels.length === 2) return `utenti ${labels[0]} o ${labels[1]}`;
+  return `utenti ${labels.slice(0, -1).join(", ")} o ${labels.slice(-1)}`;
+};
+
+const POUR_RATIONALE_TAIL = {
+  perceivable: "le informazioni essenziali possono non essere percepite o distinguibili.",
+  operable: "l’utente può non riuscire ad azionare il servizio o completare il compito.",
+  understandable: "linguaggio, struttura o feedback possono risultare poco comprensibili.",
+  robust: "le tecnologie assistive possono non interpretare correttamente controlli, stati o contenuti.",
+};
+
+const buildSuggestions = ({ journey, macro_step, touchpoint, pour, cats, requirement, framework }) => {
+  const legends = framework.legends;
+  const tpLabel = legends.touchpoints_it[touchpoint] || touchpoint;
+  const stepDescriptor = framework.journeys[journey].macro_steps.find(s => s.id === macro_step);
+  const stepName = (stepDescriptor?.name_it || macro_step).toLowerCase();
+  const req = (requirement || "").trim().replace(/\?\s*$/, "");
+  const reqLow = req ? req.charAt(0).toLowerCase() + req.slice(1) : "il requisito di accessibilità è soddisfatto";
+  const tail = POUR_RATIONALE_TAIL[pour] || POUR_RATIONALE_TAIL.perceivable;
+
+  const question_it = `Nel touchpoint ${tpLabel}, è garantito che ${reqLow}?`;
+  const rationale_it = `Nel macro-step ${stepName}, una barriera nel touchpoint ${tpLabel} può escludere o penalizzare ${categoriesPhrase(cats, legends)}: ${tail}`;
+  const conformity_criteria = {
+    full_compliance: `Il requisito è pienamente soddisfatto: ${reqLow}; nel touchpoint ${tpLabel} contenuti, controlli e messaggi sono equivalenti e accessibili; le evidenze coprono almeno desktop/mobile ove applicabile, tastiera, screen reader o altro ausilio pertinente.`,
+    partial_barrier: `Il requisito è soddisfatto solo in parte: ${reqLow} è disponibile ma non in tutti gli scenari, canali, dispositivi o stati d’errore; l’utente può completare il percorso solo con assistenza, workaround o passaggi aggiuntivi.`,
+    critical_ko: `Il requisito non è soddisfatto: ${reqLow} è assente, non utilizzabile o non equivalente; la barriera impedisce o rende sostanzialmente non autonoma la conclusione dell’attività bancaria.`,
+  };
+  const remediation_hint_it = "Correggere componenti UI, etichette, focus, contrasto, messaggi di stato e flussi di errore; rieseguire test con tastiera, screen reader, zoom/reflow e impostazioni di accessibilità del sistema operativo.";
+  const tags = Array.from(new Set([
+    journey, macro_step, touchpoint, pour, ...(cats || []),
+    "wcag", "en-301-549",
+  ])).sort();
+  return { question_it, rationale_it, conformity_criteria, remediation_hint_it, tags };
+};
+
+function recomputeStatistics(F) {
+  const stats = {
+    total_questions: 0,
+    by_journey: { current_account: 0, mortgage: 0 },
+    by_macro_step: {},
+    by_touchpoint: {},
+    by_pour: { perceivable: 0, operable: 0, understandable: 0, robust: 0 },
+    by_user_category: { auditory: 0, visual: 0, motor: 0, cognitive: 0, elderly_temporary_situational: 0 },
+  };
+  for (const j of ["current_account", "mortgage"]) {
+    const qs = F.journeys[j].questions;
+    stats.by_journey[j] = qs.length;
+    stats.total_questions += qs.length;
+    for (const q of qs) {
+      stats.by_macro_step[q.macro_step] = (stats.by_macro_step[q.macro_step] || 0) + 1;
+      stats.by_touchpoint[q.touchpoint] = (stats.by_touchpoint[q.touchpoint] || 0) + 1;
+      stats.by_pour[q.pour_principle] = (stats.by_pour[q.pour_principle] || 0) + 1;
+      for (const c of q.affected_user_categories || []) {
+        stats.by_user_category[c] = (stats.by_user_category[c] || 0) + 1;
+      }
+    }
+  }
+  return stats;
+}
+
+// ---------- Question editor dialog ----------
+function QuestionEditorDialog({ framework, existingIds, initial, isNew, prefill, onSave, onClose }) {
+  // Resolve standards: stored as integer indices in framework.standards_catalog.
+  // In the editor we work with indices directly.
+  const catalog = framework.standards_catalog || [];
+
+  const seedFromInitial = () => {
+    if (!initial) {
+      const journey = prefill?.journey || "current_account";
+      const steps = framework.journeys[journey].macro_steps;
+      // Honor an explicit map-cell selection (filterStep + filterTp) as-is.
+      // Fallbacks only kick in for partial prefills.
+      let macro_step = (prefill?.macro_step && steps.some(s => s.id === prefill.macro_step))
+        ? prefill.macro_step : null;
+      let touchpoint = prefill?.touchpoint || null;
+      if (!macro_step && touchpoint) {
+        // If only touchpoint was supplied, pick the first step that lists it.
+        const matching = steps.find(s => (s.applicable_touchpoints || []).includes(touchpoint));
+        macro_step = matching?.id || steps[0]?.id;
+      }
+      if (!macro_step) macro_step = steps[0]?.id;
+      const step = steps.find(s => s.id === macro_step);
+      const validTps = step?.applicable_touchpoints || [];
+      if (!touchpoint) touchpoint = validTps[0] || "institutional_website";
+      const cats = ["visual"];
+      const pour = POUR_FROM_CATS(cats);
+      const sug = buildSuggestions({ journey, macro_step, touchpoint, pour, cats, requirement: "", framework });
+      return {
+        id: buildQuestionId(existingIds, journey, macro_step, touchpoint),
+        journey,
+        macro_step,
+        touchpoint,
+        pour_principle: pour,
+        affected_user_categories: cats,
+        requirement: "",
+        question_it: sug.question_it,
+        rationale_it: sug.rationale_it,
+        conformity_criteria: sug.conformity_criteria,
+        remediation_hint_it: sug.remediation_hint_it,
+        tags: sug.tags,
+        standards: [],
+        idLocked: false,
+        autoFill: true,
+        tagsAuto: true,
+      };
+    }
+    const stdIdx = (initial.standards || []).map(s => typeof s === "number" ? s : catalog.findIndex(c => c && c.standard === s.standard && c.clause === s.clause)).filter(i => i >= 0);
+    return {
+      id: initial.id,
+      journey: initial.journey,
+      macro_step: initial.macro_step,
+      touchpoint: initial.touchpoint,
+      pour_principle: initial.pour_principle,
+      affected_user_categories: [...(initial.affected_user_categories || [])],
+      requirement: "",
+      question_it: initial.question_it || "",
+      rationale_it: initial.rationale_it || "",
+      conformity_criteria: { ...initial.conformity_criteria },
+      remediation_hint_it: initial.remediation_hint_it || "",
+      tags: [...(initial.tags || [])],
+      standards: stdIdx,
+      idLocked: true,
+      autoFill: false,
+    };
+  };
+
+  const [form, setForm] = React.useState(seedFromInitial);
+  const [tagInput, setTagInput] = React.useState("");
+  const [stdSearch, setStdSearch] = React.useState("");
+  const [stdShowSelectedOnly, setStdShowSelectedOnly] = React.useState(false);
+
+  const filteredStandards = React.useMemo(() => {
+    const term = stdSearch.trim().toLowerCase();
+    return catalog.map((s, i) => ({ s, i })).filter(({ s, i }) => {
+      if (stdShowSelectedOnly && !form.standards.includes(i)) return false;
+      if (!term) return true;
+      const hay = `${s.standard} ${s.clause} ${s.clause_title_it || ""} ${s.family || ""}`.toLowerCase();
+      return hay.includes(term);
+    });
+  }, [catalog, stdSearch, stdShowSelectedOnly, form.standards]);
+
+  const journeyDescriptors = framework.journeys[form.journey].macro_steps;
+  const currentStep = journeyDescriptors.find(s => s.id === form.macro_step) || journeyDescriptors[0];
+  const validTouchpoints = (() => {
+    const list = (currentStep?.applicable_touchpoints || []).slice();
+    if (form.touchpoint && !list.includes(form.touchpoint)) list.unshift(form.touchpoint);
+    return list;
+  })();
+
+  // Auto-derive question text, rationale, conformity, tags whenever core picks change,
+  // but only while the form is in "auto" mode — flipped off the first time the user edits
+  // any text field. Never auto-fill when editing an existing question.
+  const refillSuggestions = (next) => {
+    const auto = isNew && next.autoFill !== false;
+    if (!auto) return next;
+    const sug = buildSuggestions({
+      journey: next.journey,
+      macro_step: next.macro_step,
+      touchpoint: next.touchpoint,
+      pour: next.pour_principle,
+      cats: next.affected_user_categories,
+      requirement: next.requirement,
+      framework,
+    });
+    return {
+      ...next,
+      question_it: sug.question_it,
+      rationale_it: sug.rationale_it,
+      conformity_criteria: sug.conformity_criteria,
+      remediation_hint_it: next.remediation_hint_it || sug.remediation_hint_it,
+      tags: (!next.tags || !next.tags.length || next.tagsAuto !== false) ? sug.tags : next.tags,
+      tagsAuto: true,
+    };
+  };
+
+  const updateClassification = (patch) => {
+    setForm(prev => {
+      let next = { ...prev, ...patch };
+      // If journey changed, ensure macro_step belongs to it
+      if (patch.journey && patch.journey !== prev.journey) {
+        const steps = framework.journeys[patch.journey].macro_steps;
+        next.macro_step = steps[0]?.id;
+        next.touchpoint = steps[0]?.applicable_touchpoints?.[0] || next.touchpoint;
+      }
+      // If macro_step changed, ensure touchpoint is valid
+      if (patch.macro_step && patch.macro_step !== prev.macro_step) {
+        const steps = framework.journeys[next.journey].macro_steps;
+        const step = steps.find(s => s.id === patch.macro_step);
+        if (step && !step.applicable_touchpoints.includes(next.touchpoint)) {
+          next.touchpoint = step.applicable_touchpoints[0] || next.touchpoint;
+        }
+      }
+      // If categories changed and no explicit POUR override, suggest one
+      if (patch.affected_user_categories && isNew) {
+        next.pour_principle = POUR_FROM_CATS(patch.affected_user_categories);
+      }
+      // Recompute id when not manually locked
+      if (!next.idLocked && (patch.journey || patch.macro_step || patch.touchpoint || !next.id)) {
+        const otherIds = new Set(existingIds);
+        if (initial) otherIds.delete(initial.id);
+        next.id = buildQuestionId(otherIds, next.journey, next.macro_step, next.touchpoint);
+      }
+      // Refill suggestions
+      next = refillSuggestions(next);
+      return next;
+    });
+  };
+
+  const toggleCat = (c) => {
+    const cur = form.affected_user_categories || [];
+    const next = cur.includes(c) ? cur.filter(x => x !== c) : [...cur, c];
+    updateClassification({ affected_user_categories: next });
+  };
+
+  const toggleStandard = (idx) => {
+    setForm(prev => {
+      const cur = prev.standards || [];
+      const next = cur.includes(idx) ? cur.filter(x => x !== idx) : [...cur, idx];
+      return { ...prev, standards: next };
+    });
+  };
+
+  const addTag = () => {
+    const t = tagInput.trim();
+    if (!t) return;
+    setForm(prev => ({ ...prev, tags: Array.from(new Set([...(prev.tags || []), t])).sort(), tagsAuto: false }));
+    setTagInput("");
+  };
+  const removeTag = (t) => {
+    setForm(prev => ({ ...prev, tags: (prev.tags || []).filter(x => x !== t), tagsAuto: false }));
+  };
+
+  const valid =
+    !!form.id &&
+    !!form.question_it.trim() &&
+    !!form.rationale_it.trim() &&
+    !!form.conformity_criteria.full_compliance.trim() &&
+    !!form.conformity_criteria.partial_barrier.trim() &&
+    !!form.conformity_criteria.critical_ko.trim() &&
+    (form.affected_user_categories || []).length > 0 &&
+    (() => {
+      // duplicate ID check
+      if (initial && form.id === initial.id) return true;
+      return !existingIds.has(form.id);
+    })();
+
+  const idDup = !valid && form.id && existingIds.has(form.id) && (!initial || form.id !== initial.id);
+
+  const submit = () => {
+    if (!valid) return;
+    const out = {
+      id: form.id,
+      journey: form.journey,
+      macro_step: form.macro_step,
+      question_it: form.question_it.trim(),
+      rationale_it: form.rationale_it.trim(),
+      touchpoint: form.touchpoint,
+      affected_user_categories: form.affected_user_categories,
+      pour_principle: form.pour_principle,
+      standards: form.standards.slice().sort((a,b) => a-b),
+      conformity_criteria: {
+        full_compliance: form.conformity_criteria.full_compliance.trim(),
+        partial_barrier: form.conformity_criteria.partial_barrier.trim(),
+        critical_ko: form.conformity_criteria.critical_ko.trim(),
+      },
+      conformity_assessment: initial?.conformity_assessment ?? null,
+      evidence_notes_it: initial?.evidence_notes_it ?? "",
+      remediation_hint_it: form.remediation_hint_it.trim(),
+      tags: (form.tags || []).slice().sort(),
+    };
+    onSave(out);
+  };
+
+  return (
+    <div className="modal-backdrop" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="modal modal-xl">
+        <div className="modal-head">
+          <h2>{isNew ? "Aggiungi domanda" : `Modifica domanda · ${initial.id}`}</h2>
+          <span style={{flex:1}}/>
+          <button className="btn" data-variant="ghost" onClick={onClose}>
+            <Icon d={IC.x} size={14}/>
+          </button>
+        </div>
+        <div className="modal-body" style={{ gap: 18, maxHeight: "70vh", overflowY: "auto" }}>
+          <section className="qe-section">
+            <div className="qe-section-h">Classificazione</div>
+            <div className="qe-grid">
+              <label className="field">
+                <span>Journey</span>
+                <select value={form.journey} onChange={(e) => updateClassification({ journey: e.target.value })}>
+                  <option value="current_account">Conto corrente</option>
+                  <option value="mortgage">Mutuo prima casa</option>
+                </select>
+              </label>
+              <label className="field">
+                <span>Macro-step</span>
+                <select value={form.macro_step} onChange={(e) => updateClassification({ macro_step: e.target.value })}>
+                  {journeyDescriptors.map(s => (
+                    <option key={s.id} value={s.id}>{s.name_it}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="field">
+                <span>Touchpoint</span>
+                <select value={form.touchpoint} onChange={(e) => updateClassification({ touchpoint: e.target.value })}>
+                  {validTouchpoints.map(tp => (
+                    <option key={tp} value={tp}>{DB.TOUCHPOINT_LABELS[tp] || tp}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="field">
+                <span>Principio POUR</span>
+                <select value={form.pour_principle} onChange={(e) => setForm(p => ({ ...p, pour_principle: e.target.value }))}>
+                  {POUR_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+              </label>
+            </div>
+            <div className="qe-cats">
+              <span className="qe-label">Categorie utenti impattate</span>
+              <div className="qe-cat-chips">
+                {USER_CAT_OPTIONS.map(o => (
+                  <button key={o.value}
+                    className="conf-pill" data-active={form.affected_user_categories.includes(o.value)}
+                    onClick={() => toggleCat(o.value)}>
+                    {o.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <section className="qe-section">
+            <div className="qe-section-h">Identificativo</div>
+            <div className="qe-grid">
+              <label className="field" style={{ gridColumn: "span 2" }}>
+                <span>ID domanda {!form.idLocked && <em style={{ textTransform:"none", letterSpacing:0, fontWeight:500, color:"var(--muted-foreground)", marginLeft:6 }}>· generato automaticamente</em>}</span>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <input style={{ flex: 1, fontFamily: "var(--font-family-mono)" }}
+                    value={form.id}
+                    onChange={(e) => setForm(p => ({ ...p, id: e.target.value, idLocked: true }))} />
+                  {form.idLocked && isNew && (
+                    <button className="btn" data-variant="ghost" onClick={() => {
+                      const otherIds = new Set(existingIds);
+                      if (initial) otherIds.delete(initial.id);
+                      setForm(p => ({ ...p, idLocked: false, id: buildQuestionId(otherIds, p.journey, p.macro_step, p.touchpoint) }));
+                    }}>
+                      <Icon d={IC.reset} size={12}/> Auto
+                    </button>
+                  )}
+                </div>
+                {idDup && <small style={{ color: "var(--destructive)", marginTop: 4 }}>ID già usato da un'altra domanda.</small>}
+              </label>
+            </div>
+          </section>
+
+          <section className="qe-section">
+            <div className="qe-section-h">Contenuto</div>
+            {isNew && (
+              <label className="field">
+                <span>Requisito sintetico (per i suggerimenti)</span>
+                <input
+                  placeholder='Es: "le tabelle dei costi sono leggibili anche con zoom e screen reader"'
+                  value={form.requirement}
+                  onChange={(e) => {
+                    const requirement = e.target.value;
+                    setForm(prev => refillSuggestions({ ...prev, requirement, autoFill: true }));
+                  }} />
+              </label>
+            )}
+            <label className="field">
+              <span>Domanda (it)</span>
+              <textarea className="qe-textarea" rows={2}
+                value={form.question_it}
+                onChange={(e) => setForm(p => ({ ...p, question_it: e.target.value, autoFill: false }))} />
+            </label>
+            <label className="field">
+              <span>Rationale (it)</span>
+              <textarea className="qe-textarea" rows={3}
+                value={form.rationale_it}
+                onChange={(e) => setForm(p => ({ ...p, rationale_it: e.target.value }))} />
+            </label>
+          </section>
+
+          <section className="qe-section">
+            <div className="qe-section-h">Criteri di conformità</div>
+            <label className="field">
+              <span><span className="dot-sw full"/> Piena aderenza</span>
+              <textarea className="qe-textarea" rows={2}
+                value={form.conformity_criteria.full_compliance}
+                onChange={(e) => setForm(p => ({ ...p, conformity_criteria: { ...p.conformity_criteria, full_compliance: e.target.value } }))} />
+            </label>
+            <label className="field">
+              <span><span className="dot-sw part"/> Barriera parziale</span>
+              <textarea className="qe-textarea" rows={2}
+                value={form.conformity_criteria.partial_barrier}
+                onChange={(e) => setForm(p => ({ ...p, conformity_criteria: { ...p.conformity_criteria, partial_barrier: e.target.value } }))} />
+            </label>
+            <label className="field">
+              <span><span className="dot-sw ko"/> KO critico</span>
+              <textarea className="qe-textarea" rows={2}
+                value={form.conformity_criteria.critical_ko}
+                onChange={(e) => setForm(p => ({ ...p, conformity_criteria: { ...p.conformity_criteria, critical_ko: e.target.value } }))} />
+            </label>
+            <label className="field">
+              <span>Suggerimento di remediation</span>
+              <textarea className="qe-textarea" rows={2}
+                value={form.remediation_hint_it}
+                onChange={(e) => setForm(p => ({ ...p, remediation_hint_it: e.target.value }))} />
+            </label>
+          </section>
+
+          <section className="qe-section">
+            <div className="qe-section-h" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span>Standard di riferimento</span>
+              <span style={{ color: "var(--muted-foreground)", fontWeight: 500 }}>
+                · {form.standards.length} selezionati
+              </span>
+              <span style={{ flex: 1 }} />
+              <button className="conf-pill" data-active={stdShowSelectedOnly}
+                onClick={() => setStdShowSelectedOnly(v => !v)}
+                style={{ padding: "3px 9px", fontSize: 11 }}>
+                Solo selezionati
+              </button>
+            </div>
+            <div className="list-search">
+              <Icon d={IC.search} size={14} />
+              <input
+                placeholder="Cerca per standard, clausola o titolo…"
+                value={stdSearch}
+                onChange={(e) => setStdSearch(e.target.value)} />
+              {stdSearch && (
+                <button className="list-search-clear" onClick={() => setStdSearch("")} title="Cancella ricerca">
+                  <Icon d={IC.x} size={12} />
+                </button>
+              )}
+            </div>
+            <div className="qe-std-list">
+              {filteredStandards.length === 0 ? (
+                <div className="qe-std-empty">Nessuno standard corrisponde alla ricerca.</div>
+              ) : filteredStandards.map(({ s, i }) => (
+                <label key={i} className="qe-std-item" data-active={form.standards.includes(i)}>
+                  <input type="checkbox" checked={form.standards.includes(i)} onChange={() => toggleStandard(i)} />
+                  <div className="qe-std-text">
+                    <div className="qe-std-name">{s.standard}</div>
+                    <div className="qe-std-clause">{s.clause}{s.clause_title_it ? ` — ${s.clause_title_it}` : ""}</div>
+                  </div>
+                </label>
+              ))}
+            </div>
+          </section>
+
+          <section className="qe-section">
+            <div className="qe-section-h">Tag</div>
+            <div className="qe-tag-row">
+              {(form.tags || []).map(t => (
+                <span key={t} className="qe-tag">
+                  {t}
+                  <button onClick={() => removeTag(t)} title="Rimuovi tag"><Icon d={IC.x} size={10}/></button>
+                </span>
+              ))}
+              <input className="qe-tag-input"
+                placeholder="aggiungi tag…"
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTag(); } }} />
+            </div>
+          </section>
+        </div>
+        <div className="modal-foot">
+          <button className="btn" data-variant="ghost" onClick={onClose}>Annulla</button>
+          <button className="btn" data-variant="primary" disabled={!valid} onClick={submit}>
+            {isNew ? "Aggiungi" : "Aggiorna"}
+          </button>
         </div>
       </div>
     </div>

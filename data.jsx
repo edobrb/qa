@@ -3,16 +3,71 @@
 // and exposes window.AUDIT_DATA in the shape the UI components consume.
 
 (function () {
-  const FRAMEWORKS = Array.isArray(window.AUDIT_FRAMEWORKS) ? window.AUDIT_FRAMEWORKS : [];
-  if (!FRAMEWORKS.length) {
+  const BUILTIN = Array.isArray(window.AUDIT_FRAMEWORKS) ? window.AUDIT_FRAMEWORKS : [];
+  if (!BUILTIN.length) {
     console.error("AUDIT_FRAMEWORKS not loaded — framework.js must be included before data.jsx");
     return;
+  }
+
+  // ---------- Framework override / custom-framework persistence ----------
+  // Built-in frameworks live in framework.js. The user can edit them via the UI;
+  // their changes are stored as a per-id override. Imported frameworks (entirely
+  // user-supplied) live alongside in the same store under their own id.
+  const FW_STORE_KEY = "audit_a11y_frameworks_v1";
+  function loadFrameworkStore() {
+    try { return JSON.parse(localStorage.getItem(FW_STORE_KEY) || "{}") || {}; }
+    catch (_) { return {}; }
+  }
+  function saveFrameworkStore(store) {
+    try { localStorage.setItem(FW_STORE_KEY, JSON.stringify(store)); } catch (_) {}
+  }
+  function saveFramework(id, framework) {
+    const store = loadFrameworkStore();
+    store[id] = framework;
+    saveFrameworkStore(store);
+  }
+  function resetFramework(id) {
+    const store = loadFrameworkStore();
+    delete store[id];
+    saveFrameworkStore(store);
+  }
+  function isBuiltinFramework(id) {
+    return BUILTIN.some((f, i) => (f.metadata.id || `fw_${i}`) === id);
+  }
+
+  // A stored framework must at least carry metadata/legends/journeys with both
+  // current_account and mortgage sections — otherwise the rest of the app crashes.
+  function isValidFramework(f) {
+    return !!(f && f.metadata && f.legends && f.legends.touchpoints_it
+      && f.journeys && f.journeys.current_account && f.journeys.mortgage
+      && Array.isArray(f.journeys.current_account.questions)
+      && Array.isArray(f.journeys.mortgage.questions)
+      && Array.isArray(f.journeys.current_account.macro_steps)
+      && Array.isArray(f.journeys.mortgage.macro_steps));
+  }
+
+  const _store = loadFrameworkStore();
+
+  // Compose the full framework list: built-ins (with valid overrides applied) + custom imports.
+  const FRAMEWORKS = [];
+  const _seen = new Set();
+  for (let i = 0; i < BUILTIN.length; i++) {
+    const id = BUILTIN[i].metadata.id || `fw_${i}`;
+    const override = _store[id];
+    FRAMEWORKS.push(isValidFramework(override) ? override : BUILTIN[i]);
+    _seen.add(id);
+  }
+  for (const id of Object.keys(_store)) {
+    if (_seen.has(id)) continue;
+    if (isValidFramework(_store[id])) FRAMEWORKS.push(_store[id]);
   }
 
   const FRAMEWORKS_LIST = FRAMEWORKS.map((f, i) => ({
     id: f.metadata.id || `fw_${i}`,
     name: f.metadata.name_it || f.metadata.title_it || `Framework ${i + 1}`,
     version: f.metadata.version || "",
+    custom: !isBuiltinFramework(f.metadata.id || `fw_${i}`),
+    overridden: isBuiltinFramework(f.metadata.id || `fw_${i}`) && !!_store[f.metadata.id || `fw_${i}`],
   }));
 
   const META_KEY = "audit_a11y_meta_v1";
@@ -188,6 +243,8 @@
     TOUCHPOINT_LABELS,
     TOUCHPOINT_SHORT,
     TP_CODE,
+    STEP_CODES,
+    STEP_SHORT,
     MACRO_STEPS,
     POUR_LABEL,
     USER_CAT_LABEL,
@@ -197,9 +254,14 @@
     AUDIT_META,
     FRAMEWORKS_LIST,
     FRAMEWORK_ID,
+    FRAMEWORK: F,
     LEGENDS: F.legends,
     STATISTICS: F.statistics,
     STANDARDS_CATALOG,
-    persistence: { loadStates, saveStates, loadMeta, saveMeta, STORAGE_KEY, META_KEY },
+    persistence: {
+      loadStates, saveStates, loadMeta, saveMeta,
+      saveFramework, resetFramework, isBuiltinFramework,
+      STORAGE_KEY, META_KEY, FW_STORE_KEY,
+    },
   };
 })();
