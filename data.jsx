@@ -1,13 +1,26 @@
 // data.jsx — production data layer.
-// Reads window.AUDIT_FRAMEWORK (loaded from framework.js, generated from questions.json)
+// Reads window.AUDIT_FRAMEWORKS (loaded from framework.js, generated from questions.json)
 // and exposes window.AUDIT_DATA in the shape the UI components consume.
 
 (function () {
-  const F = window.AUDIT_FRAMEWORK;
-  if (!F) {
-    console.error("AUDIT_FRAMEWORK not loaded — framework.js must be included before data.jsx");
+  const FRAMEWORKS = Array.isArray(window.AUDIT_FRAMEWORKS) ? window.AUDIT_FRAMEWORKS : [];
+  if (!FRAMEWORKS.length) {
+    console.error("AUDIT_FRAMEWORKS not loaded — framework.js must be included before data.jsx");
     return;
   }
+
+  const FRAMEWORKS_LIST = FRAMEWORKS.map((f, i) => ({
+    id: f.metadata.id || `fw_${i}`,
+    name: f.metadata.name_it || f.metadata.title_it || `Framework ${i + 1}`,
+    version: f.metadata.version || "",
+  }));
+
+  const META_KEY = "audit_a11y_meta_v1";
+  let _savedMeta = {};
+  try { _savedMeta = JSON.parse(localStorage.getItem(META_KEY) || "{}") || {}; } catch (_) {}
+  const _selectedId = _savedMeta.framework_id;
+  const F = FRAMEWORKS.find((f, i) => (f.metadata.id || `fw_${i}`) === _selectedId) || FRAMEWORKS[0];
+  const FRAMEWORK_ID = F.metadata.id || "fw_0";
 
   // ---------- Touchpoint code (for IDs / chips) ----------
   const TP_CODE = {
@@ -101,10 +114,15 @@
   };
 
   // ---------- Normalize all questions to a single flat array with UI-friendly aliases ----------
-  // We keep both the original schema fields AND short aliases used across the UI.
+  // Question.standards is stored as integer indices into F.standards_catalog — resolve here.
+  const STANDARDS_CATALOG = F.standards_catalog || [];
+  const resolveStandards = refs =>
+    (refs || []).map(r => (typeof r === "number" ? STANDARDS_CATALOG[r] : r)).filter(Boolean);
+
   const ALL = [];
   for (const j of ["current_account", "mortgage"]) {
     for (const q of F.journeys[j].questions) {
+      const standards = resolveStandards(q.standards);
       ALL.push({
         // identity / classification
         id: q.id,
@@ -116,7 +134,7 @@
         rationale_it: q.rationale_it,
         pour_principle: q.pour_principle,
         affected_user_categories: q.affected_user_categories,
-        standards: q.standards,
+        standards,
         conformity_criteria: q.conformity_criteria,
         remediation_hint_it: q.remediation_hint_it,
         tags: q.tags,
@@ -132,9 +150,11 @@
 
   // ---------- Audit metadata (project header) ----------
   const AUDIT_META = {
+    framework_id: FRAMEWORK_ID,
     framework_version: F.metadata.version,
     framework_date: F.metadata.date,
     framework_title: F.metadata.title_it,
+    framework_name: F.metadata.name_it || F.metadata.title_it,
     total_questions: F.statistics.total_questions,
   };
 
@@ -152,7 +172,6 @@
     catch (_) {}
   }
 
-  const META_KEY = "audit_a11y_meta_v1";
   function loadMeta() {
     try {
       const raw = localStorage.getItem(META_KEY);
@@ -176,8 +195,11 @@
     QUESTIONS: ALL,
     SEED_STATES: loadStates(),
     AUDIT_META,
+    FRAMEWORKS_LIST,
+    FRAMEWORK_ID,
     LEGENDS: F.legends,
     STATISTICS: F.statistics,
+    STANDARDS_CATALOG,
     persistence: { loadStates, saveStates, loadMeta, saveMeta, STORAGE_KEY, META_KEY },
   };
 })();

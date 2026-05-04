@@ -14,7 +14,7 @@ If you find yourself reaching for npm, webpack, vite, TypeScript, a test runner,
 index.html
   ├─ React 18 (UMD, pinned)
   ├─ Babel standalone (pinned)
-  ├─ framework.js          → window.FRAMEWORK_DATA (raw 276-question dataset)
+  ├─ framework.js          → window.AUDIT_FRAMEWORKS (array of audit framework datasets)
   ├─ data.jsx              → window.AUDIT_DATA (curated facade + persistence)
   ├─ shared.jsx            → window.AppShared (Icon, IC, Pill, useAuditState, tally, exportCSV/JSON, STATUS_KEY)
   ├─ dashboard.jsx         → window.DashboardView

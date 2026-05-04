@@ -9,6 +9,7 @@ const DEFAULT_PROJECT = {
   visit_date: new Date().toISOString().slice(0,10),
   auditor: "",
   scope: "Conto corrente + Mutuo prima casa",
+  framework_id: DB.FRAMEWORK_ID,
 };
 
 function App() {
@@ -167,7 +168,15 @@ function App() {
         {view === "dashboard" && <window.DashboardView states={states} project={project} />}
       </div>
 
-      {showMeta && <MetaDialog project={project} onSave={(p) => { setProject(p); setShowMeta(false); }} onClose={() => setShowMeta(false)} required={!project.client} />}
+      {showMeta && <MetaDialog project={project} onSave={(p) => {
+        const fwChanged = p.framework_id && p.framework_id !== DB.FRAMEWORK_ID;
+        setProject(p);
+        setShowMeta(false);
+        if (fwChanged) {
+          DB.persistence.saveMeta(p);
+          location.reload();
+        }
+      }} onClose={() => setShowMeta(false)} required={!project.client} />}
       {showReset && <ConfirmDialog title="Azzerare le risposte?" body="Verranno cancellate tutte le valutazioni, le note e i follow-up salvati su questo browser. L'azione non può essere annullata."
         confirmLabel="Azzera tutto" destructive
         onConfirm={() => { resetStates(); setShowReset(false); }} onCancel={() => setShowReset(false)} />}
@@ -746,8 +755,9 @@ function QuestionView({ q, state, onUpdate, navIdx, navTotal, onPrev, onNext, on
 
 // ---------- Project meta dialog ----------
 function MetaDialog({ project, onSave, onClose, required }) {
-  const [draft, setDraft] = React.useState({ ...project });
-  const valid = !!draft.client?.trim();
+  const [draft, setDraft] = React.useState({ ...project, framework_id: project.framework_id || DB.FRAMEWORK_ID });
+  const valid = !!draft.client?.trim() && !!draft.framework_id;
+  const frameworks = DB.FRAMEWORKS_LIST || [];
   return (
     <div className="modal-backdrop" onClick={(e) => { if (!required && e.target === e.currentTarget) onClose(); }}>
       <div className="modal">
@@ -761,6 +771,19 @@ function MetaDialog({ project, onSave, onClose, required }) {
             <span>Cliente</span>
             <input value={draft.client} onChange={(e) => setDraft({...draft, client: e.target.value})}
               placeholder="Es. Banca Aurora Romagna" autoFocus />
+          </label>
+          <label className="field">
+            <span>Framework</span>
+            <select value={draft.framework_id} onChange={(e) => setDraft({...draft, framework_id: e.target.value})}>
+              {frameworks.map(f => (
+                <option key={f.id} value={f.id}>{f.name}{f.version ? ` · v${f.version}` : ""}</option>
+              ))}
+            </select>
+            {draft.framework_id !== DB.FRAMEWORK_ID && (
+              <small style={{color:"var(--muted-foreground)", marginTop:4}}>
+                Cambiando framework la pagina verrà ricaricata.
+              </small>
+            )}
           </label>
           <label className="field">
             <span>Data visita</span>
