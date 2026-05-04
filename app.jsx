@@ -515,10 +515,10 @@ function TopBar({ view, activeJourney, filterStep, filterTp, onClearFilter, acti
           <div className="menu">
             <div className="menu-label">Risposte audit</div>
             <button className="menu-item" onClick={() => { onExportCSV(); setExportOpen(false); }}>
-              <Icon d={IC.doc} size={14} /> CSV (foglio di calcolo)
+              <Icon d={IC.doc} size={14} /> Esporta domande (CSV)
             </button>
             <button className="menu-item" onClick={() => { onExportJSON(); setExportOpen(false); }}>
-              <Icon d={IC.save} size={14} /> JSON (backup audit)
+              <Icon d={IC.save} size={14} /> Esporta domande (JSON)
             </button>
             <div className="menu-sep" />
             <div className="menu-label">Framework</div>
