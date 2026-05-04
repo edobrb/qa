@@ -4,6 +4,11 @@
 const { Icon, IC, STATUS_KEY, useAuditState, Pill, tally, exportCSV, exportJSON } = /** @type {any} */ (window).AppShared;
 const DB = /** @type {any} */ (window).AUDIT_DATA;
 
+const APP_INFO = {
+  version: "0.0.1",
+  author: "Caterina Ramilli",
+};
+
 const DEFAULT_PROJECT = {
   client: "",
   visit_date: new Date().toISOString().slice(0,10),
@@ -45,6 +50,7 @@ function App() {
   const [showFwReset, setShowFwReset] = React.useState(false);
   const [showFwExport, setShowFwExport] = React.useState(false);
   const [pendingFwImport, setPendingFwImport] = React.useState(null); // candidate framework JSON
+  const [showAbout, setShowAbout] = React.useState(false);
 
   const cellQuestions = React.useMemo(() => {
     return DB.QUESTIONS.filter(q =>
@@ -280,6 +286,7 @@ function App() {
         onSetJourney={(j) => { setActiveJourney(j); setFilterStep(null); setFilterTp(null); }}
         onEditMeta={() => setShowMeta(true)}
         onReset={() => setShowReset(true)}
+        onShowAbout={() => setShowAbout(true)}
       />
       <div className="main">
         <TopBar view={view} onSetView={setView}
@@ -381,12 +388,13 @@ function App() {
           onConfirm={doImportFramework}
           onClose={() => setPendingFwImport(null)} />
       )}
+      {showAbout && <AboutDialog onClose={() => setShowAbout(false)} />}
     </div>
   );
 }
 
 // ---------- Sidebar ----------
-function Sidebar({ states, activeJourney, view, project, onSetView, onSetJourney, onEditMeta, onReset }) {
+function Sidebar({ states, activeJourney, view, project, onSetView, onSetJourney, onEditMeta, onReset, onShowAbout }) {
   const t = tally(DB.QUESTIONS, states);
   const ccT = tally(DB.QUESTIONS.filter(q => q.journey === "current_account"), states);
   const muT = tally(DB.QUESTIONS.filter(q => q.journey === "mortgage"), states);
@@ -453,7 +461,11 @@ function Sidebar({ states, activeJourney, view, project, onSetView, onSetJourney
       </div>
 
       <div className="sb-foot">
-        Framework v{DB.AUDIT_META.framework_version} · {DB.QUESTIONS.length} domande
+        <span>Framework v{DB.AUDIT_META.framework_version} · {DB.QUESTIONS.length} domande</span>
+        <button className="sb-foot-info" onClick={onShowAbout}
+          title="Informazioni sull'applicazione">
+          <Icon d={IC.info} size={14}/>
+        </button>
       </div>
     </aside>
   );
@@ -1112,6 +1124,46 @@ function ConfirmDialog({ title, body, confirmLabel, destructive, onConfirm, onCa
         <div className="modal-foot">
           <button className="btn" onClick={onCancel}>Annulla</button>
           <button className="btn" data-variant={destructive ? "danger" : "primary"} onClick={onConfirm}>{confirmLabel}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------- About / info dialog ----------
+function AboutDialog({ onClose }) {
+  return (
+    <div className="modal-backdrop" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="modal" style={{ maxWidth: 460 }}>
+        <div className="modal-head">
+          <h2>Informazioni</h2>
+          <span style={{ flex: 1 }} />
+          <button className="btn" data-variant="ghost" onClick={onClose}><Icon d={IC.x} size={14}/></button>
+        </div>
+        <div className="modal-body" style={{ gap: 14 }}>
+          <div className="about-block">
+            <div className="about-label">Versione software</div>
+            <div className="about-value" style={{ fontFamily: "var(--font-family-mono)" }}>v{APP_INFO.version}</div>
+          </div>
+          <div className="about-block">
+            <div className="about-label">Autrice</div>
+            <div className="about-value">{APP_INFO.author}</div>
+          </div>
+          <div className="about-block">
+            <div className="about-label">Licenza</div>
+            <div className="about-value" style={{ fontSize: 12, lineHeight: 1.55, color: "var(--muted-foreground)" }}>
+              Il software viene fornito "così com'è", senza alcuna garanzia di alcun tipo, esplicita o implicita, incluse, ma non limitate a, garanzie di commerciabilità, idoneità per uno scopo particolare e non violazione. In nessun caso l'autrice sarà responsabile per danni derivanti dall'uso del software.
+            </div>
+          </div>
+          <div className="about-block" style={{ display: "flex", gap: 10, padding: 12, background: "color-mix(in oklch, var(--success) 8%, var(--card))", border: "1px solid color-mix(in oklch, var(--success) 30%, var(--border))", borderRadius: "var(--radius-md)" }}>
+            <Icon d={IC.check} size={16} className="icon" />
+            <div style={{ fontSize: 12, lineHeight: 1.55 }}>
+              <strong>Privacy:</strong> nessun dato lascia il browser. L'applicazione opera interamente in locale: i progetti, le risposte e i framework sono salvati nel <code style={{ fontFamily: "var(--font-family-mono)" }}>localStorage</code> del browser. L'unico modo di esportare i dati è attraverso le funzionalità di esportazione (CSV / JSON) attivate manualmente.
+            </div>
+          </div>
+        </div>
+        <div className="modal-foot">
+          <button className="btn" data-variant="primary" onClick={onClose}>Chiudi</button>
         </div>
       </div>
     </div>
