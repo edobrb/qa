@@ -333,6 +333,24 @@ textarea.notes:focus { outline: none; box-shadow: 0 0 0 var(--focus-ring-width) 
 .heatmap .hm-cell[data-na="true"] { background: repeating-linear-gradient(135deg, var(--background), var(--background) 4px, var(--muted) 4px, var(--muted) 5px); cursor: default; color: var(--muted-foreground);}
 .heatmap .hm-cell.hm-cell-empty { cursor: pointer; }
 .heatmap .hm-cell.hm-cell-empty:hover { outline: 2px dashed color-mix(in oklch, var(--primary) 60%, transparent); outline-offset: -2px; z-index: 2; color: var(--foreground); }
+
+/* Channel band — groups touchpoint rows by canale (Digitale / Fisico / Umano) */
+.heatmap .hm-group {
+  grid-column: 1 / -1;
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 12px 5px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--muted-foreground);
+  background: color-mix(in oklch, var(--g-color, var(--primary)) 6%, var(--card));
+  border-bottom: 1px solid var(--border);
+}
+.heatmap .hm-group::before {
+  content: ""; width: 10px; height: 10px; border-radius: 3px;
+  background: var(--g-color, var(--primary));
+}
+.heatmap .hm-group[data-channel="digital"]  { --g-color: var(--chart-1); }
+.heatmap .hm-group[data-channel="physical"] { --g-color: var(--chart-2); }
+.heatmap .hm-group[data-channel="human"]    { --g-color: var(--chart-3); }
 .heatmap .hm-cell.hm-cell-empty[data-applicable="false"] { opacity: 0.55; }
 .heatmap .hm-cell.hm-cell-empty[data-applicable="false"]:hover { opacity: 1; }
 .heatmap .hm-cell .hm-add {

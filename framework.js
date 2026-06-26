@@ -32,26 +32,70 @@ window.AUDIT_FRAMEWORKS = [
         "elderly_temporary_situational": "anziani o con limitazioni temporanee/situazionali"
       },
       "touchpoints_it": {
-        "home_banking_app": "app di home banking",
-        "home_banking_web": "home banking web",
-        "institutional_website": "sito istituzionale",
-        "web_documents": "documenti digitali e PDF",
-        "email_push_notifications": "email, SMS e notifiche push",
-        "payment_app_wallet": "app di pagamento e wallet",
-        "chatbot_virtual_assistant": "chatbot e assistente virtuale",
-        "digital_media": "contenuti digital media",
-        "paper_documents": "documenti cartacei",
-        "tickets_receipts": "ticket e ricevute",
-        "informational_material": "materiale informativo",
-        "atm_csa_self_service": "ATM, CSA e self-service",
-        "pos_payment_terminals": "terminali POS",
-        "credit_card": "carte fisiche",
-        "check": "assegni",
-        "graphometric_tablet_e_signature": "tavoletta grafometrica e firma elettronica",
-        "branch": "filiale",
-        "phone_banking": "phone banking",
-        "call_center": "call center",
-        "branch_consultant": "consulente di filiale"
+        "home_banking_app": "Relax Banking App",
+        "home_banking_web": "Relax Banking",
+        "institutional_website": "Sito Istituzionale",
+        "web_documents": "Documenti Web",
+        "email_push_notifications": "Email / OTP / Notifiche",
+        "payment_app_wallet": "Wallet / App di pagamento",
+        "chatbot_virtual_assistant": "Chatbot",
+        "digital_media": "Media Digitali",
+        "paper_documents": "Documenti Cartacei",
+        "tickets_receipts": "Ticket e Ricevute",
+        "informational_material": "Materiale Illustrativo",
+        "atm_csa_self_service": "ATM / CSA / Totem",
+        "pos_payment_terminals": "POS",
+        "credit_card": "Carta di Credito/Debito",
+        "check": "Assegno / Titolo",
+        "graphometric_tablet_e_signature": "Tavoletta Grafometrica e Firma",
+        "branch": "Filiale (Media/Piccola)",
+        "phone_banking": "Banca Telefonica",
+        "call_center": "Contact Center",
+        "branch_consultant": "Consulente"
+      },
+      "touchpoint_channels_it": {
+        "home_banking_app": "digital",
+        "home_banking_web": "digital",
+        "institutional_website": "digital",
+        "web_documents": "digital",
+        "email_push_notifications": "digital",
+        "payment_app_wallet": "digital",
+        "chatbot_virtual_assistant": "digital",
+        "digital_media": "digital",
+        "paper_documents": "physical",
+        "tickets_receipts": "physical",
+        "informational_material": "physical",
+        "atm_csa_self_service": "physical",
+        "pos_payment_terminals": "physical",
+        "credit_card": "physical",
+        "check": "physical",
+        "graphometric_tablet_e_signature": "physical",
+        "branch": "physical",
+        "phone_banking": "human",
+        "call_center": "human",
+        "branch_consultant": "human"
+      },
+      "touchpoint_moments_it": {
+        "home_banking_app": "transactional",
+        "home_banking_web": "informational",
+        "institutional_website": "informational",
+        "web_documents": "informational",
+        "email_push_notifications": "informational",
+        "payment_app_wallet": "transactional",
+        "chatbot_virtual_assistant": "relational",
+        "digital_media": "relational",
+        "paper_documents": "informational",
+        "tickets_receipts": "informational",
+        "informational_material": "informational",
+        "atm_csa_self_service": "transactional",
+        "pos_payment_terminals": "transactional",
+        "credit_card": "transactional",
+        "check": "transactional",
+        "graphometric_tablet_e_signature": "transactional",
+        "branch": "relational",
+        "phone_banking": "relational",
+        "call_center": "relational",
+        "branch_consultant": "relational"
       }
     },
     "standards_catalog": [
@@ -1048,8 +1092,8 @@ window.AUDIT_FRAMEWORKS = [
         "macro_steps": [
           {
             "id": "search_and_orientation",
-            "name_it": "Ricerca e orientamento al conto corrente",
-            "description_it": "Valutazione dell’accessibilità nella ricerca dell’offerta, confronto condizioni, materiale informativo e primo contatto.",
+            "name_it": "Orientamento",
+            "description_it": "Ricerca dell'offerta, consultazione web, confronto e valutazione dei prodotti, primo contatto con la filiale e fissazione dell'appuntamento.",
             "applicable_touchpoints": [
               "institutional_website",
               "web_documents",
@@ -1062,8 +1106,8 @@ window.AUDIT_FRAMEWORKS = [
           },
           {
             "id": "account_opening",
-            "name_it": "Apertura del conto corrente",
-            "description_it": "Valutazione dell’accessibilità dei flussi di onboarding, KYC, sottoscrizione, firma, attivazione strumenti e assistenza.",
+            "name_it": "Apertura",
+            "description_it": "Accoglienza e attesa in filiale, colloquio e selezione del prodotto, adempimenti preliminari (privacy, identificazione, verifica), attività operative e contrattualizzazione di conto, carta e home banking.",
             "applicable_touchpoints": [
               "home_banking_app",
               "home_banking_web",
@@ -1087,8 +1131,8 @@ window.AUDIT_FRAMEWORKS = [
           },
           {
             "id": "account_operations",
-            "name_it": "Operatività del conto corrente",
-            "description_it": "Valutazione dell’accessibilità delle operazioni quotidiane su conto, carte, pagamenti, ATM/POS, notifiche e assistenza.",
+            "name_it": "Operatività",
+            "description_it": "Operazioni quotidiane: prelievo ad ATM, versamento allo sportello, identificazione, accredito e rendicontazione periodica con consultazione e verifica dei documenti.",
             "applicable_touchpoints": [
               "home_banking_app",
               "home_banking_web",
@@ -1114,8 +1158,8 @@ window.AUDIT_FRAMEWORKS = [
           },
           {
             "id": "account_closure",
-            "name_it": "Chiusura del conto corrente",
-            "description_it": "Valutazione dell’accessibilità della richiesta di chiusura, revoche, trasferimenti residui, conferme e documentazione finale.",
+            "name_it": "Chiusura",
+            "description_it": "Richiesta di chiusura (appuntamento, raccomandata, colloquio, identificazione, sottoscrizione), estinzione del rapporto e archiviazione della documentazione.",
             "applicable_touchpoints": [
               "home_banking_app",
               "home_banking_web",
@@ -7379,8 +7423,8 @@ window.AUDIT_FRAMEWORKS = [
         "macro_steps": [
           {
             "id": "exploration_and_first_contact",
-            "name_it": "Esplorazione e primo contatto per il mutuo",
-            "description_it": "Valutazione dell’accessibilità nella simulazione del mutuo, ricerca informazioni e contatto iniziale.",
+            "name_it": "Orientamento",
+            "description_it": "Consultazione web, confronto e valutazione delle offerte di mutuo, primo contatto con la filiale e fissazione dell'appuntamento.",
             "applicable_touchpoints": [
               "home_banking_app",
               "institutional_website",
@@ -7397,8 +7441,8 @@ window.AUDIT_FRAMEWORKS = [
           },
           {
             "id": "documentation_and_underwriting",
-            "name_it": "Raccolta documentale e istruttoria del mutuo",
-            "description_it": "Valutazione dell’accessibilità della raccolta documentale, integrazioni, comunicazioni istruttorie e verifica dei dati.",
+            "name_it": "Richiesta",
+            "description_it": "Accoglienza e colloquio, overview e selezione del prodotto, analisi e consegna del PIES, formalizzazione e scelta delle coperture, raccolta e verifica documentale e avvio della perizia.",
             "applicable_touchpoints": [
               "home_banking_app",
               "home_banking_web",
@@ -7413,8 +7457,8 @@ window.AUDIT_FRAMEWORKS = [
           },
           {
             "id": "deliberation_and_proposal",
-            "name_it": "Delibera e proposta di mutuo",
-            "description_it": "Valutazione dell’accessibilità della proposta, ESIS/PIES, condizioni economiche, deliberazione e accettazione.",
+            "name_it": "Delibera",
+            "description_it": "Analisi ed emissione della delibera di credito, stipula del contratto, rogito notarile, erogazione dei fondi e consegna del piano di ammortamento.",
             "applicable_touchpoints": [
               "home_banking_app",
               "home_banking_web",
@@ -7426,30 +7470,14 @@ window.AUDIT_FRAMEWORKS = [
               "informational_material",
               "branch",
               "call_center",
-              "branch_consultant"
-            ]
-          },
-          {
-            "id": "signing_and_notary_deed",
-            "name_it": "Stipula e rogito notarile",
-            "description_it": "Valutazione dell’accessibilità della stipula, firma, rogito notarile, presenza fisica/remota e documentazione contrattuale.",
-            "applicable_touchpoints": [
-              "home_banking_app",
-              "home_banking_web",
-              "web_documents",
-              "email_push_notifications",
-              "digital_media",
-              "paper_documents",
-              "graphometric_tablet_e_signature",
-              "branch",
-              "call_center",
-              "branch_consultant"
+              "branch_consultant",
+              "graphometric_tablet_e_signature"
             ]
           },
           {
             "id": "post_disbursement_and_repayment",
-            "name_it": "Post-erogazione e rimborso del mutuo",
-            "description_it": "Valutazione dell’accessibilità della fase di rimborso, comunicazioni periodiche, modifiche, surroga, estinzione e gestione insoluti.",
+            "name_it": "Operatività",
+            "description_it": "Monitoraggio e gestione del mutuo: consultazione e verifica del piano, download dei documenti, addebito delle rate, gestione dei ritardi, rinegoziazione ed estinzione.",
             "applicable_touchpoints": [
               "home_banking_app",
               "home_banking_web",
@@ -10390,7 +10418,7 @@ window.AUDIT_FRAMEWORKS = [
           {
             "id": "MU-STI-HBA-001",
             "journey": "mortgage",
-            "macro_step": "signing_and_notary_deed",
+            "macro_step": "deliberation_and_proposal",
             "question_it": "Nel touchpoint app di home banking, è garantito che la prenotazione dell’appuntamento per stipula o rogito sia accessibile, con scelta sede, data, esigenze di assistenza e conferma chiara?",
             "rationale_it": "Nel macro-step stipula e rogito notarile, una barriera nel touchpoint app di home banking può escludere o penalizzare utenti con disabilità motorie, con disabilità visive, con disabilità cognitive o neurodivergenze, anziani o con limitazioni temporanee/situazionali: l’utente può non riuscire ad azionare il servizio o completare il compito.",
             "touchpoint": "home_banking_app",
@@ -10431,7 +10459,7 @@ window.AUDIT_FRAMEWORKS = [
           {
             "id": "MU-STI-FIL-001",
             "journey": "mortgage",
-            "macro_step": "signing_and_notary_deed",
+            "macro_step": "deliberation_and_proposal",
             "question_it": "Nel touchpoint filiale, è garantito che percorso, ingresso, ascensori e sala firma per rogito o stipula siano accessibili a persone con mobilità ridotta?",
             "rationale_it": "Nel macro-step stipula e rogito notarile, una barriera nel touchpoint filiale può escludere o penalizzare utenti con disabilità motorie, anziani o con limitazioni temporanee/situazionali: l’utente può non riuscire ad azionare il servizio o completare il compito.",
             "touchpoint": "branch",
@@ -10468,7 +10496,7 @@ window.AUDIT_FRAMEWORKS = [
           {
             "id": "MU-STI-FIL-002",
             "journey": "mortgage",
-            "macro_step": "signing_and_notary_deed",
+            "macro_step": "deliberation_and_proposal",
             "question_it": "Nel touchpoint filiale, è garantito che accoglienza, chiamata del turno e indicazioni verso sala firma siano percepibili tramite modalità visive, tattili o testuali alternative?",
             "rationale_it": "Nel macro-step stipula e rogito notarile, una barriera nel touchpoint filiale può escludere o penalizzare utenti con disabilità visive, con disabilità uditive, con disabilità cognitive o neurodivergenze: le informazioni essenziali possono non essere percepite o distinguibili.",
             "touchpoint": "branch",
@@ -10509,7 +10537,7 @@ window.AUDIT_FRAMEWORKS = [
           {
             "id": "MU-STI-FIL-003",
             "journey": "mortgage",
-            "macro_step": "signing_and_notary_deed",
+            "macro_step": "deliberation_and_proposal",
             "question_it": "Nel touchpoint filiale, è garantito che la sala firma offra condizioni acustiche, illuminazione e supporti di ascolto adeguati per comprendere clausole lette o spiegate?",
             "rationale_it": "Nel macro-step stipula e rogito notarile, una barriera nel touchpoint filiale può escludere o penalizzare utenti con disabilità uditive, con disabilità visive, anziani o con limitazioni temporanee/situazionali: le informazioni essenziali possono non essere percepite o distinguibili.",
             "touchpoint": "branch",
@@ -10550,7 +10578,7 @@ window.AUDIT_FRAMEWORKS = [
           {
             "id": "MU-STI-CON-001",
             "journey": "mortgage",
-            "macro_step": "signing_and_notary_deed",
+            "macro_step": "deliberation_and_proposal",
             "question_it": "Nel touchpoint consulente di filiale, è garantito che per la stipula siano disponibili interprete LIS, relay o canali testuali quando la procedura richiede comunicazione orale essenziale?",
             "rationale_it": "Nel macro-step stipula e rogito notarile, una barriera nel touchpoint consulente di filiale può escludere o penalizzare utenti con disabilità uditive, con disabilità cognitive o neurodivergenze: l’utente può non riuscire ad azionare il servizio o completare il compito.",
             "touchpoint": "branch_consultant",
@@ -10587,7 +10615,7 @@ window.AUDIT_FRAMEWORKS = [
           {
             "id": "MU-STI-DOC-001",
             "journey": "mortgage",
-            "macro_step": "signing_and_notary_deed",
+            "macro_step": "deliberation_and_proposal",
             "question_it": "Nel touchpoint documenti digitali e PDF, è garantito che contratto di mutuo, capitolato e allegati siano forniti prima della firma in formato PDF/UA o equivalente accessibile?",
             "rationale_it": "Nel macro-step stipula e rogito notarile, una barriera nel touchpoint documenti digitali e PDF può escludere o penalizzare utenti con disabilità visive, con disabilità cognitive o neurodivergenze, con disabilità motorie: le tecnologie assistive possono non interpretare correttamente controlli, stati o contenuti.",
             "touchpoint": "web_documents",
@@ -10630,7 +10658,7 @@ window.AUDIT_FRAMEWORKS = [
           {
             "id": "MU-STI-PAP-001",
             "journey": "mortgage",
-            "macro_step": "signing_and_notary_deed",
+            "macro_step": "deliberation_and_proposal",
             "question_it": "Nel touchpoint documenti cartacei, è garantito che documenti cartacei di stipula siano disponibili in carattere grande, digitale accessibile o lettura assistita prima del momento vincolante?",
             "rationale_it": "Nel macro-step stipula e rogito notarile, una barriera nel touchpoint documenti cartacei può escludere o penalizzare utenti con disabilità visive, con disabilità cognitive o neurodivergenze, anziani o con limitazioni temporanee/situazionali: le informazioni essenziali possono non essere percepite o distinguibili.",
             "touchpoint": "paper_documents",
@@ -10670,7 +10698,7 @@ window.AUDIT_FRAMEWORKS = [
           {
             "id": "MU-STI-DOC-002",
             "journey": "mortgage",
-            "macro_step": "signing_and_notary_deed",
+            "macro_step": "deliberation_and_proposal",
             "question_it": "Nel touchpoint documenti digitali e PDF, è garantito che atto notarile e allegati abbiano ordine di lettura, riferimenti incrociati e note comprensibili anche tramite screen reader?",
             "rationale_it": "Nel macro-step stipula e rogito notarile, una barriera nel touchpoint documenti digitali e PDF può escludere o penalizzare utenti con disabilità visive, con disabilità cognitive o neurodivergenze: le tecnologie assistive possono non interpretare correttamente controlli, stati o contenuti.",
             "touchpoint": "web_documents",
@@ -10709,7 +10737,7 @@ window.AUDIT_FRAMEWORKS = [
           {
             "id": "MU-STI-TAB-001",
             "journey": "mortgage",
-            "macro_step": "signing_and_notary_deed",
+            "macro_step": "deliberation_and_proposal",
             "question_it": "Nel touchpoint tavoletta grafometrica e firma elettronica, è garantito che la tavoletta grafometrica renda identificabili documento, pagina, campo firma e azione richiesta anche a utenti ciechi o ipovedenti?",
             "rationale_it": "Nel macro-step stipula e rogito notarile, una barriera nel touchpoint tavoletta grafometrica e firma elettronica può escludere o penalizzare utenti con disabilità visive, con disabilità cognitive o neurodivergenze: le informazioni essenziali possono non essere percepite o distinguibili.",
             "touchpoint": "graphometric_tablet_e_signature",
@@ -10749,7 +10777,7 @@ window.AUDIT_FRAMEWORKS = [
           {
             "id": "MU-STI-TAB-002",
             "journey": "mortgage",
-            "macro_step": "signing_and_notary_deed",
+            "macro_step": "deliberation_and_proposal",
             "question_it": "Nel touchpoint tavoletta grafometrica e firma elettronica, è garantito che la firma grafometrica abbia alternativa equivalente per utenti con disabilità motorie o impossibilità di firmare a mano?",
             "rationale_it": "Nel macro-step stipula e rogito notarile, una barriera nel touchpoint tavoletta grafometrica e firma elettronica può escludere o penalizzare utenti con disabilità motorie, anziani o con limitazioni temporanee/situazionali: l’utente può non riuscire ad azionare il servizio o completare il compito.",
             "touchpoint": "graphometric_tablet_e_signature",
@@ -10790,7 +10818,7 @@ window.AUDIT_FRAMEWORKS = [
           {
             "id": "MU-STI-TAB-003",
             "journey": "mortgage",
-            "macro_step": "signing_and_notary_deed",
+            "macro_step": "deliberation_and_proposal",
             "question_it": "Nel touchpoint tavoletta grafometrica e firma elettronica, è garantito che controlli conferma, annulla e prosegui della firma elettronica siano attivabili senza precisione fine e con prevenzione tocchi accidentali?",
             "rationale_it": "Nel macro-step stipula e rogito notarile, una barriera nel touchpoint tavoletta grafometrica e firma elettronica può escludere o penalizzare utenti con disabilità motorie, con disabilità visive, anziani o con limitazioni temporanee/situazionali: l’utente può non riuscire ad azionare il servizio o completare il compito.",
             "touchpoint": "graphometric_tablet_e_signature",
@@ -10830,7 +10858,7 @@ window.AUDIT_FRAMEWORKS = [
           {
             "id": "MU-STI-HBA-002",
             "journey": "mortgage",
-            "macro_step": "signing_and_notary_deed",
+            "macro_step": "deliberation_and_proposal",
             "question_it": "Nel touchpoint app di home banking, è garantito che autenticazione forte, OTP o firma digitale remota per stipula siano accessibili e non dipendano da un solo canale sensoriale?",
             "rationale_it": "Nel macro-step stipula e rogito notarile, una barriera nel touchpoint app di home banking può escludere o penalizzare utenti con disabilità visive, con disabilità uditive, con disabilità motorie, con disabilità cognitive o neurodivergenze: l’utente può non riuscire ad azionare il servizio o completare il compito.",
             "touchpoint": "home_banking_app",
@@ -10874,7 +10902,7 @@ window.AUDIT_FRAMEWORKS = [
           {
             "id": "MU-STI-DOC-003",
             "journey": "mortgage",
-            "macro_step": "signing_and_notary_deed",
+            "macro_step": "deliberation_and_proposal",
             "question_it": "Nel touchpoint documenti digitali e PDF, è garantito che prima della firma sia disponibile un riepilogo accessibile delle clausole essenziali, dei costi e degli impegni assunti?",
             "rationale_it": "Nel macro-step stipula e rogito notarile, una barriera nel touchpoint documenti digitali e PDF può escludere o penalizzare utenti con disabilità cognitive o neurodivergenze, con disabilità visive, anziani o con limitazioni temporanee/situazionali: istruzioni, condizioni o errori possono risultare ambigui e portare a scelte non consapevoli.",
             "touchpoint": "web_documents",
@@ -10915,7 +10943,7 @@ window.AUDIT_FRAMEWORKS = [
           {
             "id": "MU-STI-HBA-003",
             "journey": "mortgage",
-            "macro_step": "signing_and_notary_deed",
+            "macro_step": "deliberation_and_proposal",
             "question_it": "Nel touchpoint app di home banking, è garantito che ogni azione legalmente vincolante richieda conferma esplicita, annullabile e rileggibile prima dell’invio definitivo?",
             "rationale_it": "Nel macro-step stipula e rogito notarile, una barriera nel touchpoint app di home banking può escludere o penalizzare utenti con disabilità cognitive o neurodivergenze, con disabilità motorie, anziani o con limitazioni temporanee/situazionali: istruzioni, condizioni o errori possono risultare ambigui e portare a scelte non consapevoli.",
             "touchpoint": "home_banking_app",
@@ -10955,7 +10983,7 @@ window.AUDIT_FRAMEWORKS = [
           {
             "id": "MU-STI-TAB-004",
             "journey": "mortgage",
-            "macro_step": "signing_and_notary_deed",
+            "macro_step": "deliberation_and_proposal",
             "question_it": "Nel touchpoint tavoletta grafometrica e firma elettronica, è garantito che la sessione di firma non imponga countdown non estendibili o pressione temporale incompatibile con tecnologie assistive?",
             "rationale_it": "Nel macro-step stipula e rogito notarile, una barriera nel touchpoint tavoletta grafometrica e firma elettronica può escludere o penalizzare utenti con disabilità motorie, con disabilità cognitive o neurodivergenze, con disabilità visive, anziani o con limitazioni temporanee/situazionali: l’utente può non riuscire ad azionare il servizio o completare il compito.",
             "touchpoint": "graphometric_tablet_e_signature",
@@ -10998,7 +11026,7 @@ window.AUDIT_FRAMEWORKS = [
           {
             "id": "MU-STI-HBW-001",
             "journey": "mortgage",
-            "macro_step": "signing_and_notary_deed",
+            "macro_step": "deliberation_and_proposal",
             "question_it": "Nel touchpoint home banking web, è garantito che l’utente possa consultare i documenti di firma con le proprie tecnologie assistive su dispositivo personale prima dell’atto?",
             "rationale_it": "Nel macro-step stipula e rogito notarile, una barriera nel touchpoint home banking web può escludere o penalizzare utenti con disabilità visive, con disabilità motorie, con disabilità cognitive o neurodivergenze: l’utente può non riuscire ad azionare il servizio o completare il compito.",
             "touchpoint": "home_banking_web",
@@ -11040,7 +11068,7 @@ window.AUDIT_FRAMEWORKS = [
           {
             "id": "MU-STI-CON-002",
             "journey": "mortgage",
-            "macro_step": "signing_and_notary_deed",
+            "macro_step": "deliberation_and_proposal",
             "question_it": "Nel touchpoint consulente di filiale, è garantito che il consulente spieghi il flusso di firma rispettando autonomia, privacy e decisione informata dell’utente con disabilità?",
             "rationale_it": "Nel macro-step stipula e rogito notarile, una barriera nel touchpoint consulente di filiale può escludere o penalizzare utenti con disabilità cognitive o neurodivergenze, con disabilità visive, con disabilità uditive, anziani o con limitazioni temporanee/situazionali: istruzioni, condizioni o errori possono risultare ambigui e portare a scelte non consapevoli.",
             "touchpoint": "branch_consultant",
@@ -11082,7 +11110,7 @@ window.AUDIT_FRAMEWORKS = [
           {
             "id": "MU-STI-CON-003",
             "journey": "mortgage",
-            "macro_step": "signing_and_notary_deed",
+            "macro_step": "deliberation_and_proposal",
             "question_it": "Nel touchpoint consulente di filiale, è garantito che siano previste procedure accessibili per delega, procura, testimone o assistenza alla firma quando l’utente non può firmare autonomamente?",
             "rationale_it": "Nel macro-step stipula e rogito notarile, una barriera nel touchpoint consulente di filiale può escludere o penalizzare utenti con disabilità motorie, con disabilità visive, con disabilità cognitive o neurodivergenze, anziani o con limitazioni temporanee/situazionali: l’utente può non riuscire ad azionare il servizio o completare il compito.",
             "touchpoint": "branch_consultant",
@@ -11124,7 +11152,7 @@ window.AUDIT_FRAMEWORKS = [
           {
             "id": "MU-STI-CAL-001",
             "journey": "mortgage",
-            "macro_step": "signing_and_notary_deed",
+            "macro_step": "deliberation_and_proposal",
             "question_it": "Nel touchpoint call center, è garantito che istruzioni pre-stipula comunicate telefonicamente siano replicate in canali testuali accessibili e coerenti con la documentazione ufficiale?",
             "rationale_it": "Nel macro-step stipula e rogito notarile, una barriera nel touchpoint call center può escludere o penalizzare utenti con disabilità uditive, con disabilità cognitive o neurodivergenze, anziani o con limitazioni temporanee/situazionali: istruzioni, condizioni o errori possono risultare ambigui e portare a scelte non consapevoli.",
             "touchpoint": "call_center",
@@ -11164,7 +11192,7 @@ window.AUDIT_FRAMEWORKS = [
           {
             "id": "MU-STI-EML-001",
             "journey": "mortgage",
-            "macro_step": "signing_and_notary_deed",
+            "macro_step": "deliberation_and_proposal",
             "question_it": "Nel touchpoint email, SMS e notifiche push, è garantito che il pacchetto documentale inviato via email prima della firma abbia allegati accessibili, nomi descrittivi e ordine di consultazione chiaro?",
             "rationale_it": "Nel macro-step stipula e rogito notarile, una barriera nel touchpoint email, SMS e notifiche push può escludere o penalizzare utenti con disabilità visive, con disabilità cognitive o neurodivergenze: le tecnologie assistive possono non interpretare correttamente controlli, stati o contenuti.",
             "touchpoint": "email_push_notifications",
@@ -11205,7 +11233,7 @@ window.AUDIT_FRAMEWORKS = [
           {
             "id": "MU-STI-PAP-002",
             "journey": "mortgage",
-            "macro_step": "signing_and_notary_deed",
+            "macro_step": "deliberation_and_proposal",
             "question_it": "Nel touchpoint documenti cartacei, è garantito che moduli di identificazione, privacy e consegna copie in sede siano leggibili, compilabili con supporto e disponibili in formato alternativo?",
             "rationale_it": "Nel macro-step stipula e rogito notarile, una barriera nel touchpoint documenti cartacei può escludere o penalizzare utenti con disabilità visive, con disabilità motorie, con disabilità cognitive o neurodivergenze: le informazioni essenziali possono non essere percepite o distinguibili.",
             "touchpoint": "paper_documents",
@@ -11244,7 +11272,7 @@ window.AUDIT_FRAMEWORKS = [
           {
             "id": "MU-STI-MED-001",
             "journey": "mortgage",
-            "macro_step": "signing_and_notary_deed",
+            "macro_step": "deliberation_and_proposal",
             "question_it": "Nel touchpoint contenuti digital media, è garantito che guide video o tutorial su come firmare il mutuo abbiano sottotitoli, trascrizione e descrizione dei passaggi visivi?",
             "rationale_it": "Nel macro-step stipula e rogito notarile, una barriera nel touchpoint contenuti digital media può escludere o penalizzare utenti con disabilità uditive, con disabilità visive, con disabilità cognitive o neurodivergenze: le informazioni essenziali possono non essere percepite o distinguibili.",
             "touchpoint": "digital_media",
@@ -11287,7 +11315,7 @@ window.AUDIT_FRAMEWORKS = [
           {
             "id": "MU-STI-DOC-004",
             "journey": "mortgage",
-            "macro_step": "signing_and_notary_deed",
+            "macro_step": "deliberation_and_proposal",
             "question_it": "Nel touchpoint documenti digitali e PDF, è garantito che ricevuta, copia firmata e attestazione di stipula siano consegnate in formato accessibile subito dopo la firma?",
             "rationale_it": "Nel macro-step stipula e rogito notarile, una barriera nel touchpoint documenti digitali e PDF può escludere o penalizzare utenti con disabilità visive, con disabilità cognitive o neurodivergenze, anziani o con limitazioni temporanee/situazionali: le tecnologie assistive possono non interpretare correttamente controlli, stati o contenuti.",
             "touchpoint": "web_documents",
@@ -11329,7 +11357,7 @@ window.AUDIT_FRAMEWORKS = [
           {
             "id": "MU-STI-HBW-002",
             "journey": "mortgage",
-            "macro_step": "signing_and_notary_deed",
+            "macro_step": "deliberation_and_proposal",
             "question_it": "Nel touchpoint home banking web, è garantito che il registro o audit trail della firma sia scaricabile come documento testuale accessibile e non solo come immagine o scansione?",
             "rationale_it": "Nel macro-step stipula e rogito notarile, una barriera nel touchpoint home banking web può escludere o penalizzare utenti con disabilità visive, con disabilità cognitive o neurodivergenze: le tecnologie assistive possono non interpretare correttamente controlli, stati o contenuti.",
             "touchpoint": "home_banking_web",
@@ -12381,8 +12409,7 @@ window.AUDIT_FRAMEWORKS = [
         "account_closure": 25,
         "exploration_and_first_contact": 24,
         "documentation_and_underwriting": 24,
-        "deliberation_and_proposal": 24,
-        "signing_and_notary_deed": 24,
+        "deliberation_and_proposal": 48,
         "post_disbursement_and_repayment": 24
       },
       "by_touchpoint": {

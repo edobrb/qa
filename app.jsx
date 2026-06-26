@@ -278,7 +278,7 @@ function App() {
   };
 
   return (
-    <div className="app-shell">
+    <div className="app-shell" data-journey={activeJourney}>
       <Sidebar
         states={states}
         activeJourney={activeJourney}
@@ -570,7 +570,12 @@ function MapView({ journey, states, hotOnly, setHotOnly, onPickCell, onPickStep,
     const set = new Set();
     for (const s of steps) for (const tp of (s.applicable_touchpoints || [])) set.add(tp);
     for (const q of DB.QUESTIONS) if (q.journey === journey) set.add(q.touchpoint);
-    return [...set];
+    // Order rows by channel (Digitale → Fisico → Umano), stable within channel,
+    // so the heatmap mirrors the BCC touchpoint ecosystem. Unknown channels last.
+    const order = DB.CHANNEL_ORDER || [];
+    const ch = DB.TOUCHPOINT_CHANNEL || {};
+    const rank = (tp) => { const i = order.indexOf(ch[tp]); return i === -1 ? 99 : i; };
+    return [...set].map((tp, i) => [tp, i]).sort((a, b) => rank(a[0]) - rank(b[0]) || a[1] - b[1]).map(x => x[0]);
   }, [journey, steps]);
 
   const cellMap = React.useMemo(() => {
@@ -596,8 +601,8 @@ function MapView({ journey, states, hotOnly, setHotOnly, onPickCell, onPickStep,
     // Lightness 0.93 (light tint) → 0.84 (saturated). Chroma 0.06 → 0.14.
     const lightness = 0.94 - 0.10 * (koWeight + (1 - ratio)) / 2;
     const chroma = 0.05 + 0.10 * Math.max(koWeight, 1 - ratio, ratio);
-    // Hue: 25 (red) at ratio=0 → 75 (amber) at 0.5 → 145 (green) at 1.
-    const hue = 25 + 120 * ratio;
+    // Hue: 25 (red) at ratio=0 → ~87 (amber) at 0.5 → 150 (Verde BCC) at 1.
+    const hue = 25 + 125 * ratio;
     const bg = `oklch(${lightness.toFixed(3)} ${chroma.toFixed(3)} ${hue.toFixed(1)})`;
     const accent = t.ko > 0 ? "var(--destructive)" : null;
     return { bg, accent, ratio };
@@ -630,7 +635,7 @@ function MapView({ journey, states, hotOnly, setHotOnly, onPickCell, onPickStep,
   return (
     <div className="map-wrap">
       <div className="map-head" style={{display:"flex", alignItems:"center", gap: 12}}>
-        <div>
+        <div style={{ borderInlineStart: "4px solid var(--journey-accent, var(--primary))", paddingInlineStart: 12 }}>
           <h1>Mappa touchpoint × macro-step</h1>
           <span className="sub">
             {journey === "current_account" ? "Conto corrente" : "Mutuo prima casa"} · {DB.QUESTIONS.filter(q=>q.journey===journey).length} domande.
@@ -659,7 +664,13 @@ function MapView({ journey, states, hotOnly, setHotOnly, onPickCell, onPickStep,
             </div>
           );
         })}
-        {visibleTps.map(tp => (
+        {(() => { let prevCh = null; return visibleTps.flatMap(tp => {
+          const c = DB.TOUCHPOINT_CHANNEL[tp];
+          const head = (c && c !== prevCh && DB.CHANNEL_LABEL[c])
+            ? [<div key={"g-" + c} className="hm-group" data-channel={c} title={`Canale: ${DB.CHANNEL_LABEL[c]}`}>{DB.CHANNEL_LABEL[c]}</div>]
+            : [];
+          if (c) prevCh = c;
+          return [...head, (
           <React.Fragment key={tp}>
             <div className="hm-row-h" style={{ cursor: "pointer" }} onClick={() => onPickTp(tp)}>
               <div>{DB.TOUCHPOINT_LABELS[tp]}</div>
@@ -714,7 +725,8 @@ function MapView({ journey, states, hotOnly, setHotOnly, onPickCell, onPickStep,
               );
             })}
           </React.Fragment>
-        ))}
+          )];
+        }); })()}
       </div>
 
       <div className="map-legend">
@@ -724,8 +736,8 @@ function MapView({ journey, states, hotOnly, setHotOnly, onPickCell, onPickStep,
             <span style={{background:"oklch(0.88 0.12 25)"}} />
             <span style={{background:"oklch(0.90 0.10 55)"}} />
             <span style={{background:"oklch(0.92 0.09 85)"}} />
-            <span style={{background:"oklch(0.92 0.10 115)"}} />
-            <span style={{background:"oklch(0.90 0.13 145)"}} />
+            <span style={{background:"oklch(0.92 0.10 118)"}} />
+            <span style={{background:"oklch(0.90 0.13 150)"}} />
           </span>
           <span style={{fontSize:11, color:"var(--muted-foreground)"}}>0% → 100%</span>
         </span>

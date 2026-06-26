@@ -113,16 +113,25 @@
     call_center: "CAL", branch_consultant: "CON",
   };
 
-  // ---------- Touchpoint short labels (UI chips) ----------
+  // ---------- Touchpoint short labels (UI chips) — vocabolario BCC ----------
   const TOUCHPOINT_SHORT = {
-    home_banking_app: "App HB", home_banking_web: "HB web", institutional_website: "Sito",
-    web_documents: "Doc web", email_push_notifications: "Email/push", payment_app_wallet: "Wallet",
+    home_banking_app: "App RB", home_banking_web: "Relax Bank.", institutional_website: "Sito",
+    web_documents: "Doc web", email_push_notifications: "Email/OTP", payment_app_wallet: "Wallet",
     chatbot_virtual_assistant: "Chatbot", digital_media: "Media", paper_documents: "Cartaceo",
-    tickets_receipts: "Ricevute", informational_material: "Info", atm_csa_self_service: "ATM",
+    tickets_receipts: "Ticket", informational_material: "Materiale", atm_csa_self_service: "ATM/CSA",
     pos_payment_terminals: "POS", credit_card: "Carta", check: "Assegno",
-    graphometric_tablet_e_signature: "Tavoletta", branch: "Filiale", phone_banking: "Phone",
-    call_center: "Call center", branch_consultant: "Consulente",
+    graphometric_tablet_e_signature: "Grafometrica", branch: "Filiale", phone_banking: "Banca Tel.",
+    call_center: "Contact C.", branch_consultant: "Consulente",
   };
+
+  // ---------- Touchpoint ecosystem (canale × momento) — modello BCC ----------
+  // Source of truth lives in framework.js legends; fall back to {} for older
+  // imported frameworks that predate these legends (MapView degrades to flat).
+  const TOUCHPOINT_CHANNEL = F.legends.touchpoint_channels_it || {};
+  const TOUCHPOINT_MOMENT = F.legends.touchpoint_moments_it || {};
+  const CHANNEL_LABEL = { digital: "Digitale", physical: "Fisico", human: "Umano" };
+  const CHANNEL_ORDER = ["digital", "physical", "human"];
+  const MOMENT_LABEL = { informational: "Informativo", transactional: "Transazionale", relational: "Relazionale" };
 
   // Use legends from framework where present, fall back to overrides
   const TOUCHPOINT_LABELS = {};
@@ -137,22 +146,20 @@
     account_opening: "APE",
     account_operations: "OPE",
     account_closure: "CHI",
-    exploration_and_first_contact: "EXP",
-    documentation_and_underwriting: "DOC",
+    exploration_and_first_contact: "ORI",
+    documentation_and_underwriting: "RIC",
     deliberation_and_proposal: "DEL",
-    signing_and_notary_deed: "STI",
-    post_disbursement_and_repayment: "POS",
+    post_disbursement_and_repayment: "OPE",
   };
   const STEP_SHORT = {
     search_and_orientation: "Orientamento",
     account_opening: "Apertura",
     account_operations: "Operatività",
     account_closure: "Chiusura",
-    exploration_and_first_contact: "Esplorazione",
-    documentation_and_underwriting: "Istruttoria",
+    exploration_and_first_contact: "Orientamento",
+    documentation_and_underwriting: "Richiesta",
     deliberation_and_proposal: "Delibera",
-    signing_and_notary_deed: "Stipula",
-    post_disbursement_and_repayment: "Post-erogazione",
+    post_disbursement_and_repayment: "Operatività",
   };
 
   const MACRO_STEPS = {
@@ -267,6 +274,11 @@
   window.AUDIT_DATA = {
     TOUCHPOINT_LABELS,
     TOUCHPOINT_SHORT,
+    TOUCHPOINT_CHANNEL,
+    TOUCHPOINT_MOMENT,
+    CHANNEL_LABEL,
+    CHANNEL_ORDER,
+    MOMENT_LABEL,
     TP_CODE,
     STEP_CODES,
     STEP_SHORT,

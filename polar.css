@@ -274,6 +274,94 @@
 }
 
 /* =============================================================== */
+/*  THEME: BCC (Gruppo BCC Iccrea)                                  */
+/*  Font: Montserrat (300/400/500/600/700) · JetBrains Mono per codici */
+/*  Primari: Blu BCC #003594 (UI) · Verde BCC #00843D (conformità)  */
+/* =============================================================== */
+[data-theme="bcc"] {
+    /* Type — Montserrat for UI + headings, mono kept for ids/codes */
+    --font-family-base: Montserrat, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-family-heading: Montserrat, var(--font-family-base);
+
+    /* Surfaces + ink */
+    --background: #ffffff;
+    --foreground: #001e62;                 /* Blu Scuro BCC */
+    --card: #ffffff;
+    --card-foreground: #001e62;
+    --popover: #ffffff;
+    --popover-foreground: #001e62;
+
+    /* Semantic roles — Blu BCC drives the UI so Verde stays "conformità" */
+    --primary: #003594;                    /* Blu BCC */
+    --primary-foreground: #ffffff;
+    --secondary: #eef1f6;
+    --secondary-foreground: #003594;
+    --muted: #f2f4f7;
+    --muted-foreground: #5a6470;           /* Grigio BCC #B6B9BB è troppo chiaro per testo */
+    --accent: #e6eef7;
+    --accent-foreground: #003594;
+    --destructive: #c8102e;                /* rosso funzionale (KO) — la palette BCC non ha rosso */
+    --destructive-foreground: #ffffff;
+
+    /* Status scales */
+    --success: #00843d;                    /* Verde BCC — Piena aderenza */
+    --success-foreground: #00491f;         /* Verde Scuro BCC */
+    --success-surface: #e8f4ec;
+    --success-surface-hover: #d3ead9;
+    --success-border: #00843d;
+    --success-icon: #00843d;
+
+    --warning: #b26a00;                    /* ocra funzionale (Barriera parziale) */
+    --warning-foreground: #5c3600;
+    --warning-surface: #fbf2e3;
+    --warning-surface-hover: #f5e6c9;
+    --warning-border: #d98c1a;
+    --warning-icon: #b26a00;
+
+    --info: #007dba;                       /* Azzurro/Celeste BCC (variante scura) — Da rivedere */
+    --info-foreground: #00405e;
+    --info-surface: #e6f3fa;
+    --info-surface-hover: #cfe9f6;
+    --info-border: #62b5e5;                /* Azzurro/Celeste BCC */
+    --info-icon: #007dba;
+
+    /* Lines + inputs + rings */
+    --border: #d7dadd;                     /* da Grigio BCC #B6B9BB, schiarito per i bordi */
+    --input: #d7dadd;
+    --ring: #003594;
+    --overlay: rgb(0 30 98 / 55%);         /* Blu Scuro BCC */
+
+    /* Charts — palette BCC */
+    --chart-1: #003594;                    /* Blu BCC */
+    --chart-2: #00843d;                    /* Verde BCC */
+    --chart-3: #62b5e5;                    /* Azzurro/Celeste BCC */
+    --chart-4: #65a812;                    /* Verde Acido BCC */
+    --chart-5: #001e62;                    /* Blu Scuro BCC */
+
+    /* Sidebar */
+    --sidebar: #ffffff;
+    --sidebar-foreground: #001e62;
+    --sidebar-primary: #003594;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #e6eef7;
+    --sidebar-accent-foreground: #003594;
+    --sidebar-border: #e6e8ea;
+    --sidebar-ring: #003594;
+
+    --gradient-primary: linear-gradient(135deg, #003594 0%, #00843d 100%);
+
+    /* Per-journey accent (fedele ai blueprint: CC blu, Mutuo verde) — default blu */
+    --journey-accent: #003594;
+}
+
+/* h1 si ferma a Bold (700) nel tema BCC — peso massimo Montserrat in scope */
+[data-theme="bcc"] h1, [data-theme="bcc"] .h1 { font-weight: 700; }
+
+/* Accento per-journey: impostato sul root dell'app via data-journey */
+[data-theme="bcc"] [data-journey="current_account"] { --journey-accent: #003594; }
+[data-theme="bcc"] [data-journey="mortgage"]        { --journey-accent: #00843d; }
+
+/* =============================================================== */
 /*  BASE RULES                                                      */
 /* =============================================================== */
 html { color-scheme: light; }
