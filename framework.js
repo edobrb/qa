@@ -10451,7 +10451,7 @@ window.AUDIT_FRAMEWORKS = [
               "mortgage",
               "motor",
               "operable",
-              "signing_and_notary_deed",
+              "deliberation_and_proposal",
               "visual",
               "wcag"
             ]
@@ -10490,7 +10490,7 @@ window.AUDIT_FRAMEWORKS = [
               "mortgage",
               "motor",
               "operable",
-              "signing_and_notary_deed"
+              "deliberation_and_proposal"
             ]
           },
           {
@@ -10530,7 +10530,7 @@ window.AUDIT_FRAMEWORKS = [
               "hardware",
               "mortgage",
               "perceivable",
-              "signing_and_notary_deed",
+              "deliberation_and_proposal",
               "visual"
             ]
           },
@@ -10571,7 +10571,7 @@ window.AUDIT_FRAMEWORKS = [
               "hardware",
               "mortgage",
               "perceivable",
-              "signing_and_notary_deed",
+              "deliberation_and_proposal",
               "visual"
             ]
           },
@@ -10609,7 +10609,7 @@ window.AUDIT_FRAMEWORKS = [
               "en-301-549",
               "mortgage",
               "operable",
-              "signing_and_notary_deed"
+              "deliberation_and_proposal"
             ]
           },
           {
@@ -10649,7 +10649,7 @@ window.AUDIT_FRAMEWORKS = [
               "mutuo",
               "pdf",
               "robust",
-              "signing_and_notary_deed",
+              "deliberation_and_proposal",
               "visual",
               "wcag",
               "web_documents"
@@ -10691,7 +10691,7 @@ window.AUDIT_FRAMEWORKS = [
               "mortgage",
               "paper_documents",
               "perceivable",
-              "signing_and_notary_deed",
+              "deliberation_and_proposal",
               "visual"
             ]
           },
@@ -10728,7 +10728,7 @@ window.AUDIT_FRAMEWORKS = [
               "pdf",
               "robust",
               "screen-reader",
-              "signing_and_notary_deed",
+              "deliberation_and_proposal",
               "visual",
               "wcag",
               "web_documents"
@@ -10769,7 +10769,7 @@ window.AUDIT_FRAMEWORKS = [
               "graphometric_tablet_e_signature",
               "mortgage",
               "perceivable",
-              "signing_and_notary_deed",
+              "deliberation_and_proposal",
               "visual",
               "wcag"
             ]
@@ -10811,7 +10811,7 @@ window.AUDIT_FRAMEWORKS = [
               "motor",
               "operable",
               "pos",
-              "signing_and_notary_deed",
+              "deliberation_and_proposal",
               "wcag"
             ]
           },
@@ -10850,7 +10850,7 @@ window.AUDIT_FRAMEWORKS = [
               "mortgage",
               "motor",
               "operable",
-              "signing_and_notary_deed",
+              "deliberation_and_proposal",
               "visual",
               "wcag"
             ]
@@ -10894,7 +10894,7 @@ window.AUDIT_FRAMEWORKS = [
               "motor",
               "operable",
               "otp",
-              "signing_and_notary_deed",
+              "deliberation_and_proposal",
               "visual",
               "wcag"
             ]
@@ -10933,7 +10933,7 @@ window.AUDIT_FRAMEWORKS = [
               "en-301-549",
               "firma",
               "mortgage",
-              "signing_and_notary_deed",
+              "deliberation_and_proposal",
               "understandable",
               "visual",
               "wcag",
@@ -10975,7 +10975,7 @@ window.AUDIT_FRAMEWORKS = [
               "home_banking_app",
               "mortgage",
               "motor",
-              "signing_and_notary_deed",
+              "deliberation_and_proposal",
               "understandable",
               "wcag"
             ]
@@ -11018,7 +11018,7 @@ window.AUDIT_FRAMEWORKS = [
               "mortgage",
               "motor",
               "operable",
-              "signing_and_notary_deed",
+              "deliberation_and_proposal",
               "visual",
               "wcag"
             ]
@@ -11060,7 +11060,7 @@ window.AUDIT_FRAMEWORKS = [
               "motor",
               "operable",
               "pos",
-              "signing_and_notary_deed",
+              "deliberation_and_proposal",
               "visual",
               "wcag"
             ]
@@ -11102,7 +11102,7 @@ window.AUDIT_FRAMEWORKS = [
               "en-301-549",
               "firma",
               "mortgage",
-              "signing_and_notary_deed",
+              "deliberation_and_proposal",
               "understandable",
               "visual"
             ]
@@ -11145,7 +11145,7 @@ window.AUDIT_FRAMEWORKS = [
               "mortgage",
               "motor",
               "operable",
-              "signing_and_notary_deed",
+              "deliberation_and_proposal",
               "visual"
             ]
           },
@@ -11184,7 +11184,7 @@ window.AUDIT_FRAMEWORKS = [
               "elderly_temporary_situational",
               "en-301-549",
               "mortgage",
-              "signing_and_notary_deed",
+              "deliberation_and_proposal",
               "understandable",
               "wcag"
             ]
@@ -11225,7 +11225,7 @@ window.AUDIT_FRAMEWORKS = [
               "notifiche",
               "pdf",
               "robust",
-              "signing_and_notary_deed",
+              "deliberation_and_proposal",
               "visual",
               "wcag"
             ]
@@ -11265,7 +11265,7 @@ window.AUDIT_FRAMEWORKS = [
               "motor",
               "paper_documents",
               "perceivable",
-              "signing_and_notary_deed",
+              "deliberation_and_proposal",
               "visual"
             ]
           },
@@ -11305,7 +11305,7 @@ window.AUDIT_FRAMEWORKS = [
               "mortgage",
               "mutuo",
               "perceivable",
-              "signing_and_notary_deed",
+              "deliberation_and_proposal",
               "sottotitoli",
               "video",
               "visual",
@@ -11348,7 +11348,7 @@ window.AUDIT_FRAMEWORKS = [
               "mortgage",
               "pdf",
               "robust",
-              "signing_and_notary_deed",
+              "deliberation_and_proposal",
               "visual",
               "wcag",
               "web_documents"
@@ -11389,7 +11389,7 @@ window.AUDIT_FRAMEWORKS = [
               "mortgage",
               "pdf",
               "robust",
-              "signing_and_notary_deed",
+              "deliberation_and_proposal",
               "visual",
               "wcag"
             ]

@@ -635,7 +635,7 @@ function MapView({ journey, states, hotOnly, setHotOnly, onPickCell, onPickStep,
   return (
     <div className="map-wrap">
       <div className="map-head" style={{display:"flex", alignItems:"center", gap: 12}}>
-        <div style={{ borderInlineStart: "4px solid var(--journey-accent, var(--primary))", paddingInlineStart: 12 }}>
+        <div className="map-head-title">
           <h1>Mappa touchpoint × macro-step</h1>
           <span className="sub">
             {journey === "current_account" ? "Conto corrente" : "Mutuo prima casa"} · {DB.QUESTIONS.filter(q=>q.journey===journey).length} domande.

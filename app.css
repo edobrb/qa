@@ -334,6 +334,9 @@ textarea.notes:focus { outline: none; box-shadow: 0 0 0 var(--focus-ring-width) 
 .heatmap .hm-cell.hm-cell-empty { cursor: pointer; }
 .heatmap .hm-cell.hm-cell-empty:hover { outline: 2px dashed color-mix(in oklch, var(--primary) 60%, transparent); outline-offset: -2px; z-index: 2; color: var(--foreground); }
 
+/* Per-journey accent on the map heading — only in the BCC theme (blu CC / verde Mutuo) */
+[data-theme="bcc"] .map-head-title { border-inline-start: 4px solid var(--journey-accent); padding-inline-start: 12px; }
+
 /* Channel band — groups touchpoint rows by canale (Digitale / Fisico / Umano) */
 .heatmap .hm-group {
   grid-column: 1 / -1;

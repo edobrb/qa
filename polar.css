@@ -311,12 +311,12 @@
     --success-border: #00843d;
     --success-icon: #00843d;
 
-    --warning: #b26a00;                    /* ocra funzionale (Barriera parziale) */
+    --warning: #985a00;                    /* ocra funzionale (Barriera parziale) — ~5.2:1 su bianco, AA testo normale */
     --warning-foreground: #5c3600;
     --warning-surface: #fbf2e3;
     --warning-surface-hover: #f5e6c9;
     --warning-border: #d98c1a;
-    --warning-icon: #b26a00;
+    --warning-icon: #985a00;
 
     --info: #007dba;                       /* Azzurro/Celeste BCC (variante scura) — Da rivedere */
     --info-foreground: #00405e;
