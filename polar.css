@@ -311,12 +311,12 @@
     --success-border: #00843d;
     --success-icon: #00843d;
 
-    --warning: #985a00;                    /* ocra funzionale (Barriera parziale) — ~5.2:1 su bianco, AA testo normale */
-    --warning-foreground: #5c3600;
-    --warning-surface: #fbf2e3;
-    --warning-surface-hover: #f5e6c9;
-    --warning-border: #d98c1a;
-    --warning-icon: #985a00;
+    --warning: #cc4e00;                    /* arancio BCC (Barriera parziale) — 4.5:1 su bianco, AA testo normale */
+    --warning-foreground: #7a3500;         /* arancio bruciato scuro per testo piccolo su surface */
+    --warning-surface: #fdeede;
+    --warning-surface-hover: #f9d9bf;
+    --warning-border: #f5961b;             /* arancio chiaro BCC — bordo/accento (decorativo) */
+    --warning-icon: #cc4e00;
 
     --info: #007dba;                       /* Azzurro/Celeste BCC (variante scura) — Da rivedere */
     --info-foreground: #00405e;

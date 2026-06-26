@@ -122,7 +122,7 @@ function DashboardView({ states, project }) {
       <div className="card span-3">
         <div className="card-h">Barriere parziali</div>
         <div className="kpi-row">
-          <div className="kpi" style={{ color: "var(--warning-foreground)" }}>{t.part}</div>
+          <div className="kpi" style={{ color: "var(--warning)" }}>{t.part}</div>
           <div className="delta">remediation pianificabile</div>
         </div>
         <div className="sub" style={{ fontSize: 12, color: "var(--muted-foreground)" }}>
@@ -190,8 +190,10 @@ function DashboardView({ states, project }) {
 
       <div className="card span-6">
         <div className="card-h">Stato per journey</div>
-        <JourneyBar label="Conto corrente" t={ccT} />
-        <JourneyBar label="Mutuo prima casa" t={muT} />
+        <div className="journey-donuts">
+          <JourneyDonut label="Conto corrente" t={ccT} journey="current_account" />
+          <JourneyDonut label="Mutuo prima casa" t={muT} journey="mortgage" />
+        </div>
       </div>
 
       <div className="card span-6">
@@ -290,21 +292,47 @@ function DashboardView({ states, project }) {
   );
 }
 
-function JourneyBar({ label, t }) {
+// Donut (anello SVG, nessuna dipendenza) per variare l'output rispetto alle barre
+// usate altrove. Mostra la ripartizione di conformità con la % compilate al centro.
+function JourneyDonut({ label, t, journey }) {
+  const accent = journey === "mortgage" ? "var(--chart-2)" : "var(--chart-1)"; // verde Mutuo / blu CC
+  const segs = [
+    { v: t.full, c: "var(--success)", lab: "OK" },
+    { v: t.part, c: "var(--warning)", lab: "Parz" },
+    { v: t.ko,   c: "var(--destructive)", lab: "KO" },
+    { v: t.rev,  c: "var(--info)", lab: "Rivedere" },
+    { v: t.todo, c: "var(--muted-foreground)", lab: "Da fare" },
+    { v: t.na,   c: "var(--border)", lab: "N/A" },
+  ];
+  const total = t.total || 1;
+  const R = 42, C = 2 * Math.PI * R, SW = 16;
+  let acc = 0;
   return (
-    <div style={{ marginTop: 8 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 6 }}>
-        <span style={{ fontWeight: 500 }}>{label}</span>
-        <span style={{ color: "var(--muted-foreground)", fontVariantNumeric: "tabular-nums" }}>
-          {t.completed}/{t.total} · {t.pct}% · {t.ko} KO
-        </span>
-      </div>
-      <div className="bar-stack">
-        <span style={{ width: `${(t.full/t.total)*100}%`, background: "var(--success)" }} />
-        <span style={{ width: `${(t.part/t.total)*100}%`, background: "var(--warning)" }} />
-        <span style={{ width: `${(t.ko/t.total)*100}%`, background: "var(--destructive)" }} />
-        <span style={{ width: `${(t.rev/t.total)*100}%`, background: "var(--info)" }} />
-        <span style={{ width: `${(t.na/t.total)*100}%`, background: "var(--muted-foreground)" }} />
+    <div className="jd-row">
+      <svg width="104" height="104" viewBox="0 0 104 104" role="img"
+        aria-label={`${label}: ${t.pct}% compilate, ${t.ko} KO, ${t.part} parziali`}>
+        <circle cx="52" cy="52" r={R} fill="none" stroke="var(--muted)" strokeWidth={SW} />
+        <g transform="rotate(-90 52 52)">
+          {segs.filter(s => s.v > 0).map((s, i) => {
+            const len = (s.v / total) * C;
+            const el = <circle key={i} cx="52" cy="52" r={R} fill="none" stroke={s.c}
+              strokeWidth={SW} strokeDasharray={`${len.toFixed(2)} ${(C - len).toFixed(2)}`}
+              strokeDashoffset={(-acc).toFixed(2)} strokeLinecap="butt" />;
+            acc += len;
+            return el;
+          })}
+        </g>
+        <text x="52" y="49" textAnchor="middle" style={{ fontSize: 19, fontWeight: 700, fill: accent }}>{t.pct}%</text>
+        <text x="52" y="64" textAnchor="middle" style={{ fontSize: 8, fontWeight: 600, letterSpacing: "0.1em", fill: "var(--muted-foreground)" }}>COMPILATE</text>
+      </svg>
+      <div className="jd-info">
+        <div className="jd-label">{label}</div>
+        <div className="jd-meta">{t.completed}/{t.total} compilate · <strong style={{ color: "var(--destructive)" }}>{t.ko} KO</strong></div>
+        <div className="jd-legend">
+          {segs.filter(s => s.v > 0).map((s, i) => (
+            <span key={i}><span className="sw" style={{ background: s.c }} />{s.lab} {s.v}</span>
+          ))}
+        </div>
       </div>
     </div>
   );

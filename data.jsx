@@ -104,8 +104,8 @@
 
   // ---------- Touchpoint code (for IDs / chips) ----------
   const TP_CODE = {
-    home_banking_app: "HBA", home_banking_web: "HBW", institutional_website: "WEB",
-    web_documents: "WDC", email_push_notifications: "EML", payment_app_wallet: "WAL",
+    home_banking_web: "HBW", institutional_website: "WEB",
+    web_documents: "WDC", email_push_notifications: "EML",
     chatbot_virtual_assistant: "BOT", digital_media: "MED", paper_documents: "PAP",
     tickets_receipts: "RIC", informational_material: "INF", atm_csa_self_service: "ATM",
     pos_payment_terminals: "POS", credit_card: "CRD", check: "ASS",
@@ -115,8 +115,8 @@
 
   // ---------- Touchpoint short labels (UI chips) — vocabolario BCC ----------
   const TOUCHPOINT_SHORT = {
-    home_banking_app: "App RB", home_banking_web: "Relax Bank.", institutional_website: "Sito",
-    web_documents: "Doc web", email_push_notifications: "Email/OTP", payment_app_wallet: "Wallet",
+    home_banking_web: "Relax Banking", institutional_website: "Sito",
+    web_documents: "Doc web", email_push_notifications: "Email/OTP",
     chatbot_virtual_assistant: "Chatbot", digital_media: "Media", paper_documents: "Cartaceo",
     tickets_receipts: "Ticket", informational_material: "Materiale", atm_csa_self_service: "ATM/CSA",
     pos_payment_terminals: "POS", credit_card: "Carta", check: "Assegno",

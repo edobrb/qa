@@ -414,6 +414,16 @@ textarea.notes:focus { outline: none; box-shadow: 0 0 0 var(--focus-ring-width) 
 .legend-row { display: flex; gap: 14px; flex-wrap: wrap; font-size: 11px; color: var(--muted-foreground); margin-top: 6px;}
 .legend-row .sw { width: 10px; height: 10px; border-radius: 2px; display: inline-block; margin-right: 5px; vertical-align: middle;}
 
+/* Stato per journey — donut (anello) invece delle barre, per variare l'output */
+.journey-donuts { display: flex; flex-direction: column; gap: 18px; margin-top: 10px; }
+.jd-row { display: flex; align-items: center; gap: 16px; }
+.jd-row svg { flex: 0 0 auto; }
+.jd-info { min-width: 0; }
+.jd-label { font-size: 13px; font-weight: 600; color: var(--foreground); }
+.jd-meta { font-size: 12px; color: var(--muted-foreground); margin-top: 2px; font-variant-numeric: tabular-nums; }
+.jd-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 8px; font-size: 11px; color: var(--muted-foreground); font-variant-numeric: tabular-nums; }
+.jd-legend .sw { width: 9px; height: 9px; border-radius: 2px; display: inline-block; margin-right: 5px; vertical-align: middle; }
+
 .list { display: flex; flex-direction: column; gap: 1px; }
 .list .li {
   display: flex; align-items: center; gap: 10px; padding: 10px 0;
