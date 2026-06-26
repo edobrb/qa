@@ -10,13 +10,15 @@ The app runs entirely in the browser. State is persisted to `localStorage`; noth
 
 | Area | What it does |
 |---|---|
-| **Mappa touchpoint** | Heatmap of the journey. Rows = touchpoint (filiale fisica, app, sito, ATM…), columns = macro-step. Cells colored by share of conformi answers; red left edge marks KO critici. Click a cell, row, or column to drill into the matching question list. |
+| **Mappa touchpoint** | Heatmap of the journey. Rows = touchpoint (Relax Banking, Sito, ATM…), **grouped by canale** (Digitale / Fisico / Umano) per the BCC touchpoint ecosystem; columns = macro-step. Cells colored by share of conformi answers; red left edge marks KO critici. Click a cell, row, or column to drill into the matching question list. |
 | **Lista domande** | Filterable list grouped by macro-step. Filters: testo libero, stato (Da compilare / KO / Parziali / Piena aderenza / Da rivedere / Follow-up), principio POUR, categoria utenti impattata. |
 | **Domanda** | Single-question view. Pick conformity (full / partial / KO / da rivedere / non applicabile), flag for follow-up, write evidence notes, see remediation hint, standard references, POUR principle, affected user categories, tags. ←/→ to navigate, Esc to back. |
 | **Dashboard** | Aggregate metrics across the audit — overall completion, KO breakdown, POUR distribution, etc. |
 | **Esporta / Importa** | CSV (foglio di calcolo) · JSON (backup completo, re-importabile). Project meta (cliente, data, auditor, scope) is included in every export. |
 
-Two journeys ship in the framework: **Conto corrente** and **Mutuo prima casa**. Language is Italian throughout.
+Two journeys ship in the framework: **Conto corrente** (Orientamento · Apertura · Operatività · Chiusura) and **Mutuo prima casa** (Orientamento · Richiesta · Delibera · Operatività). Language is Italian throughout.
+
+The UI is themed for **Gruppo BCC Iccrea**: Montserrat type, BCC palette (Blu BCC `#003594` as primary, Verde BCC `#00843D` as conformity/success), and a per-journey accent (blu for Conto corrente, verde for Mutuo). The theme is `[data-theme="bcc"]` in `polar.css`; the other Polar themes (light/dark/vapor/fic) remain available.
 
 ---
 
@@ -45,7 +47,7 @@ data.jsx           Wraps framework.js and exposes window.AUDIT_DATA: QUESTIONS, 
 shared.jsx         window.AppShared — Icon set (IC), Pill, useAuditState hook, tally(), STATUS_KEY(), exportCSV / exportJSON.
 dashboard.jsx      window.DashboardView — aggregate metrics view.
 app.jsx            window.AuditApp — top-level App, Sidebar, TopBar, MapView, QListView, QuestionView, MetaDialog, ConfirmDialog.
-polar.css          Design tokens (colors, type, spacing, radii). data-theme="light" on <body>.
+polar.css          Design tokens (colors, type, spacing, radii). data-theme="bcc" on <body> (BCC brand + Montserrat); light/dark/vapor/fic also defined.
 app.css            App-specific styles built on top of polar tokens.
 ```
 

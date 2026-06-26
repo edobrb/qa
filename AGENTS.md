@@ -32,7 +32,7 @@ index.html
 5. **Don't change the five conformity levels** without updating: `data.jsx` (`CONF_LEVELS`), `shared.jsx` (`STATUS_KEY`, `tally`, `exportCSV`), `app.jsx` (QuestionView buttons, FilterChips), `dashboard.jsx`, and the heatmap color logic in `MapView`. They are coupled.
 6. **Italian copy only** for anything the auditor sees. English is fine in code comments and dev tooling.
 7. **No new runtime network calls.** The app is designed to work on patchy in-branch wifi. Google Fonts is the one tolerated exception (and even that should degrade gracefully).
-8. **Don't recreate or copy branded UI** from real banks (Intesa, Unicredit, BPER, etc.). The app is a generic tool; client identity comes from the project metadata only.
+8. **The app is themed for Gruppo BCC Iccrea** — Montserrat + BCC palette in `[data-theme="bcc"]` (the default) and BCC touchpoint vocabulary. This is intentional. Don't copy branded UI from *other* banks (Intesa, Unicredit, BPER, etc.); per-client identity still comes from the project metadata.
 
 ## How to make changes
 
@@ -40,7 +40,7 @@ index.html
 - **Add a new filter on the question list** → extend `QListView`'s `filteredList` memo and add a `<FilterChips>` row.
 - **Add a metric to the dashboard** → all aggregate logic should reuse `tally()` from `shared.jsx`. Don't reimplement counting.
 - **Add an icon** → append to `IC` in `shared.jsx`. Use `<Icon d={IC.foo} />`. Keep paths simple (24×24 viewBox, single path preferred).
-- **Add a new question/touchpoint/macro-step** → edit `framework.js`. Don't try to mutate `AUDIT_DATA` at runtime.
+- **Add a new question/touchpoint/macro-step** → edit `framework.js`. Don't try to mutate `AUDIT_DATA` at runtime. Touchpoints carry a `canale` + `momento` via `legends.touchpoint_channels_it` / `touchpoint_moments_it`; the heatmap groups rows by canale (`DB.TOUCHPOINT_CHANNEL` / `CHANNEL_LABEL`, ordered by `CHANNEL_ORDER`). The Mutuo journey has **4** macro-steps (Stipula/rogito is merged into Delibera).
 - **Bump `?v=N` in `index.html`** whenever you ship a CSS or JS change that returning auditors need to pick up.
 
 ## Testing your changes
@@ -64,9 +64,9 @@ There is no test runner. Verification is manual:
 ## Style conventions
 
 - Use design tokens from `polar.css` (`var(--muted-foreground)`, `var(--destructive)`, etc.) — do not hardcode hex values in component styles.
-- Conformity colors map: `full → success`, `part → warning`, `ko → destructive`, `rev → info`, `na → muted-foreground`. The heatmap uses `oklch()` interpolation; if you change the scale, update the legend in `MapView` too.
+- Conformity colors map: `full → success`, `part → warning`, `ko → destructive`, `rev → info`, `na → muted-foreground`. In the BCC theme `success` = Verde BCC `#00843D` and the heatmap green endpoint (hue ~150) is tuned to match. The heatmap uses `oklch()` interpolation; if you change the scale, update the legend swatches in `MapView` too.
 - Tabular numbers everywhere a count is shown: `font-variant-numeric: tabular-nums`.
-- JetBrains Mono for IDs and codes; Inter for everything else.
+- Montserrat for everything else (theme `bcc`); JetBrains Mono for IDs and codes. Inter stays the fallback for the non-BCC themes.
 
 ## When in doubt
 
