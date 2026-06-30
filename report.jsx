@@ -37,6 +37,12 @@ function indexTone(idx) {
   if (idx < 70) return "warn";
   return "good";
 }
+// Tono di un segmento (touchpoint/categoria/POUR/journey): mai "verde" se restano
+// KO critici irrisolti, anche quando l'indice è alto per via di molti N/A in conteggio.
+function segTone(r) {
+  if (r && r.ko > 0) return (r.index != null && r.index < 40) ? "bad" : "warn";
+  return indexTone(r ? r.index : null);
+}
 const TONE_COLOR = {
   bad: "var(--destructive)",
   warn: "var(--warning)",
@@ -67,9 +73,9 @@ function CompBar({ c, height = 8 }) {
 }
 
 // Gauge a semicerchio per l'indice di accessibilità (SVG, nessuna dipendenza).
-function Gauge({ pct, size = 200, label }) {
-  const tone = indexTone(pct);
-  const color = TONE_COLOR[tone];
+function Gauge({ pct, size = 200, label, tone }) {
+  const t = tone || indexTone(pct);
+  const color = TONE_COLOR[t];
   const R = 80, CX = 100, CY = 100, SW = 16;
   const d = `M ${CX - R} ${CY} A ${R} ${R} 0 0 1 ${CX + R} ${CY}`;
   const len = Math.PI * R;
@@ -161,7 +167,8 @@ function ReportView({ states, project }) {
 
   const { overall, cc, mu, byCat, byTp, byPour, themes, evidence } = data;
   const totalKo = overall.ko;
-  const answered = overall.full + overall.part + overall.ko + overall.na;
+  // "valutati" = ogni criterio con una valutazione (incluso "da rivedere"); esclude solo i non compilati.
+  const answered = overall.total - overall.todo;
 
   // Stato vuoto: nessun criterio valutato (audit non importato / non compilato).
   if (answered === 0) {
@@ -229,7 +236,7 @@ function ReportView({ states, project }) {
               (indice {fmtPct(worstTp.index)}).</span>
           </li>
           <li>
-            <span className="rep-tk-ico" data-tone="warn"><RI d={RIC.warn} size={15} /></span>
+            <span className="rep-tk-ico" data-tone={worstPour.ko > 0 ? "bad" : indexTone(worstPour.index)}><RI d={RIC.warn} size={15} /></span>
             <span>Principio POUR più debole: <strong>{RDB.POUR_LABEL[worstPour.pour]}</strong> — {worstPour.ko} KO
               critici e indice {fmtPct(worstPour.index)}.</span>
           </li>
@@ -248,9 +255,10 @@ function ReportView({ states, project }) {
         <div className="rep-sec-h"><span className="rep-sec-k">02</span> Indice di accessibilità</div>
         <div className="rep-index">
           <div className="rep-gauge-main">
-            <Gauge pct={overall.index} size={220} />
+            <Gauge pct={overall.index} size={220} tone={segTone(overall)} />
             <div className="rep-gauge-sub">
               su {overall.total} criteri · {answered} valutati
+              {overall.rev > 0 && <span className="rep-warn-inline"> · {overall.rev} da rivedere</span>}
               {overall.todo > 0 && <span className="rep-warn-inline"> · {overall.todo} non compilati</span>}
             </div>
           </div>
@@ -288,6 +296,7 @@ function ReportView({ states, project }) {
               <span><span className="sw" style={{ background: "var(--success)" }} />Conformi</span>
               <span><span className="sw" style={{ background: "var(--warning)" }} />Parziali</span>
               <span><span className="sw" style={{ background: "var(--destructive)" }} />KO</span>
+              {overall.rev > 0 && <span><span className="sw" style={{ background: "var(--info)" }} />Da rivedere</span>}
               <span><span className="sw" style={{ background: "var(--muted-foreground)" }} />N/A</span>
             </div>
           </div>
@@ -336,7 +345,7 @@ function ReportView({ states, project }) {
                 <CompBar c={r} height={6} />
               </div>
               <div className="rep-row-idx">
-                <strong style={{ color: TONE_COLOR[indexTone(r.index)] }}>{fmtPct(r.index)}</strong>
+                <strong style={{ color: TONE_COLOR[segTone(r)] }}>{fmtPct(r.index)}</strong>
                 <span>indice</span>
               </div>
             </div>
@@ -373,18 +382,20 @@ function ReportView({ states, project }) {
             <div className={"rep-tpt-row" + (r.ko > 0 ? " is-ko" : "")} key={r.tp}>
               <span className="rep-tpt-name">{RDB.TOUCHPOINT_LABELS[r.tp]}</span>
               <span><ChannelBadge tp={r.tp} /></span>
-              <span className={"rep-tpt-num" + (r.ko > 0 ? " rep-ko" : "")}><strong>{r.ko}</strong></span>
-              <span className="rep-tpt-num">{r.part}</span>
+              <span className={"rep-tpt-num" + (r.ko > 0 ? " rep-ko" : "")} data-l="KO"><strong>{r.ko}</strong></span>
+              <span className="rep-tpt-num" data-l="Parz.">{r.part}</span>
               <span className="rep-tpt-bar">
                 <span className="ib-fill" style={{ width: `${((r.ko * 3 + r.part) / maxTpIssues) * 100}%` }}>
                   <span className="ib-ko" style={{ flex: r.ko }} />
                   <span className="ib-part" style={{ flex: r.part }} />
                 </span>
               </span>
-              <span className="rep-tpt-num rep-tpt-idx">
-                {r.applicable === 0
+              <span className="rep-tpt-num rep-tpt-idx" data-l="Indice">
+                {r.na === r.total
                   ? <span className="rep-na-tag" title="Tutti i criteri non applicabili">tutti N/A</span>
-                  : <strong style={{ color: TONE_COLOR[indexTone(r.index)] }}>{fmtPct(r.index)}</strong>}
+                  : (r.full + r.part + r.ko + r.na === 0)
+                    ? <span className="rep-na-tag" title="Nessun criterio ancora valutato">non valutato</span>
+                    : <strong style={{ color: TONE_COLOR[segTone(r)] }}>{fmtPct(r.index)}</strong>}
               </span>
             </div>
           ))}
@@ -453,7 +464,7 @@ function ReportView({ states, project }) {
                 {RDB.POUR_LABEL[r.pour]}
                 {i === 0 && <span className="rep-tag rep-tag-top">più debole</span>}
               </div>
-              <div className="rep-pour-idx" style={{ color: TONE_COLOR[indexTone(r.index)] }}>{fmtPct(r.index)}</div>
+              <div className="rep-pour-idx" style={{ color: TONE_COLOR[segTone(r)] }}>{fmtPct(r.index)}</div>
               <div className="rep-pour-meta">
                 <strong className="rep-ko">{r.ko} KO</strong> · {r.part} parziali · {r.total} criteri
               </div>
@@ -512,7 +523,7 @@ function JourneyCard({ label, code, c, accent }) {
       <div className="rep-jcard-top">
         <span className="rep-jcard-code" style={{ background: accent }}>{code}</span>
         <span className="rep-jcard-label">{label}</span>
-        <span className="rep-jcard-idx" style={{ color: TONE_COLOR[indexTone(c.index)] }}>{fmtPct(c.index)}</span>
+        <span className="rep-jcard-idx" style={{ color: TONE_COLOR[segTone(c)] }}>{fmtPct(c.index)}</span>
       </div>
       <CompBar c={c} height={8} />
       <div className="rep-jcard-meta">

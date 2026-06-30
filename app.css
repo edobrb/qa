@@ -1052,7 +1052,7 @@ html, body, #root { background: var(--background); }
 .rep-journeys { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 20px; }
 .rep-jcard { border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px 16px; background: var(--background); }
 .rep-jcard-top { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-.rep-jcard-code { font-size: 11px; font-weight: 700; color: #fff; border-radius: 5px; padding: 2px 7px; font-family: var(--font-family-mono); }
+.rep-jcard-code { font-size: 11px; font-weight: 700; color: var(--primary-foreground); border-radius: 5px; padding: 2px 7px; font-family: var(--font-family-mono); }
 .rep-jcard-label { font-size: 14px; font-weight: 600; color: var(--foreground); flex: 1; }
 .rep-jcard-idx { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .rep-jcard-meta { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 9px; font-size: 11.5px; color: var(--muted-foreground); font-variant-numeric: tabular-nums; }
@@ -1123,12 +1123,12 @@ html, body, #root { background: var(--background); }
   display: flex; align-items: center; justify-content: center;
   background: var(--secondary); color: var(--primary); font-weight: 700; font-size: 14px;
 }
-.rep-theme.is-top .rep-theme-rank { background: var(--destructive); color: #fff; }
+.rep-theme.is-top .rep-theme-rank { background: var(--destructive); color: var(--destructive-foreground); }
 .rep-theme-body { min-width: 0; flex: 1; }
 .rep-theme-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
 .rep-theme-title { font-size: 14.5px; font-weight: 700; color: var(--foreground); }
 .rep-tag { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding: 2px 7px; border-radius: 999px; }
-.rep-tag-top { background: var(--destructive); color: #fff; }
+.rep-tag-top { background: var(--destructive); color: var(--destructive-foreground); }
 .rep-tag-qw { background: var(--success-surface); color: var(--success-foreground); }
 .rep-theme-metrics { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
 .rep-chip { font-size: 11.5px; padding: 2px 9px; border-radius: 999px; background: var(--muted); color: var(--muted-foreground); font-variant-numeric: tabular-nums; }
@@ -1178,7 +1178,17 @@ html, body, #root { background: var(--background); }
   .rep-row { grid-template-columns: 1fr; gap: 6px; }
   .rep-row-idx { text-align: left; }
   .rep-pour { grid-template-columns: repeat(2, 1fr); }
+  /* Touchpoint table: the header is hidden on small screens, so reflow each row as
+     a flex block with self-describing inline labels (otherwise bare numbers lose
+     their meaning and the channel pill gets clipped in a fixed narrow column). */
   .rep-tpt-head { display: none; }
-  .rep-tpt-row { grid-template-columns: 1fr 56px 56px; grid-auto-rows: auto; }
+  .rep-tpt-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; grid-template-columns: none; }
+  .rep-tpt-name { flex: 1 0 100%; font-size: 14px; }
   .rep-tpt-bar { display: none; }
+  .rep-tpt-num, .rep-tpt-idx { text-align: left; }
+  .rep-tpt-num[data-l]::before, .rep-tpt-idx[data-l]::before {
+    content: attr(data-l) " ";
+    color: var(--muted-foreground); font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
 }
