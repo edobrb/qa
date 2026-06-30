@@ -255,7 +255,7 @@ function ReportView({ states, project }) {
         <div className="rep-sec-h"><span className="rep-sec-k">02</span> Indice di accessibilità</div>
         <div className="rep-index">
           <div className="rep-gauge-main">
-            <Gauge pct={overall.index} size={220} tone={segTone(overall)} />
+            <Gauge pct={overall.index} size={160} tone={segTone(overall)} />
             <div className="rep-gauge-sub">
               su {overall.total} criteri · {answered} valutati
               {overall.rev > 0 && <span className="rep-warn-inline"> · {overall.rev} da rivedere</span>}
