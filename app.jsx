@@ -18,7 +18,7 @@ const DEFAULT_PROJECT = {
 };
 
 function App() {
-  const [view, setView] = React.useState("map"); // "map" | "list" | "question" | "dashboard"
+  const [view, setView] = React.useState("map"); // "map" | "list" | "question" | "dashboard" | "report"
   const [activeJourney, setActiveJourney] = React.useState("current_account");
   const [filterStep, setFilterStep] = React.useState(null);
   const [filterTp, setFilterTp] = React.useState(null);
@@ -339,6 +339,8 @@ function App() {
         )}
 
         {view === "dashboard" && <window.DashboardView states={states} project={project} />}
+
+        {view === "report" && <window.ReportView states={states} project={project} />}
       </div>
 
       {showMeta && <MetaDialog project={project} onSave={(p) => {
@@ -436,6 +438,9 @@ function Sidebar({ states, activeJourney, view, project, onSetView, onSetJourney
           <button className="sb-item" data-active={view === "dashboard"} onClick={() => onSetView("dashboard")}>
             <Icon d={IC.dash} /> Dashboard
           </button>
+          <button className="sb-item" data-active={view === "report"} onClick={() => onSetView("report")}>
+            <Icon d={IC.report} /> Report
+          </button>
         </div>
       </div>
 
@@ -512,6 +517,7 @@ function TopBar({ view, activeJourney, filterStep, filterTp, onClearFilter, acti
           <strong>{activeQ.id}</strong>
         </>}
         {view === "dashboard" && <><Icon d={IC.chevR} size={12}/><strong>Dashboard</strong></>}
+        {view === "report" && <><Icon d={IC.chevR} size={12}/><strong>Report di sintesi</strong></>}
       </div>
       <div className="spacer" />
       {(filterStep || filterTp) && view === "list" && (
