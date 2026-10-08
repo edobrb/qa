@@ -18,6 +18,8 @@ index.html
   ├─ data.jsx              → window.AUDIT_DATA (curated facade + persistence)
   ├─ shared.jsx            → window.AppShared (Icon, IC, Pill, useAuditState, tally, exportCSV/JSON, STATUS_KEY)
   ├─ dashboard.jsx         → window.DashboardView
+  ├─ report.jsx            → window.ReportView
+  ├─ xlsx.jsx              → window.XlsxExport ("Esporta framework (Excel)": in-browser XLSX writer, no library)
   └─ app.jsx               → window.AuditApp (root component)
 ```
 
@@ -29,7 +31,7 @@ index.html
 2. **Don't use `type="module"` on script tags.** Babel-standalone doesn't play well with it and we rely on the global-scope pattern.
 3. **Don't rename `const styles = {…}`** — that exact name is a known footgun across multiple Babel scripts. Use specific names (`mapStyles`, `qViewStyles`) or inline styles.
 4. **Don't break the JSON export schema.** Re-imported audits depend on `results: [{ id, conformity_assessment, evidence_notes_it, follow_up }]`. If you extend it, extend additively.
-5. **Don't change the five conformity levels** without updating: `data.jsx` (`CONF_LEVELS`), `shared.jsx` (`STATUS_KEY`, `tally`, `exportCSV`), `app.jsx` (QuestionView buttons, FilterChips), `dashboard.jsx`, and the heatmap color logic in `MapView`. They are coupled.
+5. **Don't change the five conformity levels** without updating: `data.jsx` (`CONF_LEVELS`), `shared.jsx` (`STATUS_KEY`, `tally`, `exportCSV`), `app.jsx` (QuestionView buttons, FilterChips), `dashboard.jsx`, `xlsx.jsx` (criteria columns + legend), and the heatmap color logic in `MapView`. They are coupled.
 6. **Italian copy only** for anything the auditor sees. English is fine in code comments and dev tooling.
 7. **No new runtime network calls.** The app is designed to work on patchy in-branch wifi. Google Fonts is the one tolerated exception (and even that should degrade gracefully).
 8. **The app is themed for Gruppo BCC Iccrea** — Montserrat + BCC palette in `[data-theme="bcc"]` (the default) and BCC touchpoint vocabulary. This is intentional. Don't copy branded UI from *other* banks (Intesa, Unicredit, BPER, etc.); per-client identity still comes from the project metadata.
