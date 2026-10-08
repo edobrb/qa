@@ -135,6 +135,12 @@ function App() {
     });
   };
   const onExportFramework = () => setShowFwExport(true);
+  const onExportFrameworkXLSX = () => {
+    window.XlsxExport.exportFrameworkXLSX().catch((e) => {
+      console.error("[audit] export Excel del framework fallito:", e);
+      alert("Impossibile generare il file Excel del framework.\n\n" + (e?.message || ""));
+    });
+  };
   const doExportFramework = ({ id, name_it, version, date }) => {
     const F = JSON.parse(JSON.stringify(DB.FRAMEWORK));
     F.metadata = {
@@ -297,6 +303,7 @@ function App() {
           activeQ={activeQ}
           onExportCSV={onExportCSV} onExportJSON={onExportJSON} onImportJSON={onImportJSON}
           onExportFramework={onExportFramework}
+          onExportFrameworkXLSX={onExportFrameworkXLSX}
           onResetFramework={onResetFramework}
           frameworkIsBuiltin={DB.persistence.isBuiltinFramework(DB.FRAMEWORK_ID)}
         />
@@ -490,7 +497,7 @@ function Sidebar({ states, activeJourney, view, project, onSetView, onSetJourney
 // ---------- Top bar ----------
 function TopBar({ view, activeJourney, filterStep, filterTp, onClearFilter, activeQ,
                   onExportCSV, onExportJSON, onImportJSON,
-                  onExportFramework, onResetFramework, frameworkIsBuiltin }) {
+                  onExportFramework, onExportFrameworkXLSX, onResetFramework, frameworkIsBuiltin }) {
   const journeyName = activeJourney === "current_account" ? "Conto corrente" : "Mutuo";
   const stepName = filterStep ? DB.MACRO_STEPS[activeJourney].find(s => s.id === filterStep)?.name : null;
   const tpName = filterTp ? DB.TOUCHPOINT_LABELS[filterTp] : null;
@@ -552,7 +559,10 @@ function TopBar({ view, activeJourney, filterStep, filterTp, onClearFilter, acti
             <div className="menu-sep" />
             <div className="menu-label">Framework</div>
             <button className="menu-item" onClick={() => { onExportFramework(); setExportOpen(false); }}>
-              <Icon d={IC.download} size={14} /> Esporta framework
+              <Icon d={IC.download} size={14} /> Esporta framework (JSON)
+            </button>
+            <button className="menu-item" onClick={() => { onExportFrameworkXLSX(); setExportOpen(false); }}>
+              <Icon d={IC.sheet} size={14} /> Esporta framework (Excel)
             </button>
             {frameworkIsBuiltin && (
               <button className="menu-item" onClick={() => { onResetFramework(); setExportOpen(false); }}>
@@ -1187,7 +1197,7 @@ function AboutDialog({ onClose }) {
           <div className="about-block" style={{ display: "flex", gap: 10, padding: 12, background: "color-mix(in oklch, var(--success) 8%, var(--card))", border: "1px solid color-mix(in oklch, var(--success) 30%, var(--border))", borderRadius: "var(--radius-md)" }}>
             <Icon d={IC.check} size={16} className="icon" />
             <div style={{ fontSize: 12, lineHeight: 1.55 }}>
-              <strong>Privacy:</strong> nessun dato lascia il browser. L'applicazione opera interamente in locale: i progetti, le risposte e i framework sono salvati nel <code style={{ fontFamily: "var(--font-family-mono)" }}>localStorage</code> del browser. L'unico modo di esportare i dati è attraverso le funzionalità di esportazione (CSV / JSON) attivate manualmente.
+              <strong>Privacy:</strong> nessun dato lascia il browser. L'applicazione opera interamente in locale: i progetti, le risposte e i framework sono salvati nel <code style={{ fontFamily: "var(--font-family-mono)" }}>localStorage</code> del browser. L'unico modo di esportare i dati è attraverso le funzionalità di esportazione (CSV / JSON / Excel) attivate manualmente.
             </div>
           </div>
         </div>

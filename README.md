@@ -14,7 +14,7 @@ The app runs entirely in the browser. State is persisted to `localStorage`; noth
 | **Lista domande** | Filterable list grouped by macro-step. Filters: testo libero, stato (Da compilare / KO / Parziali / Piena aderenza / Da rivedere / Follow-up), principio POUR, categoria utenti impattata. |
 | **Domanda** | Single-question view. Pick conformity (full / partial / KO / da rivedere / non applicabile), flag for follow-up, write evidence notes, see remediation hint, standard references, POUR principle, affected user categories, tags. ←/→ to navigate, Esc to back. |
 | **Dashboard** | Aggregate metrics across the audit — overall completion, KO breakdown, POUR distribution, etc. |
-| **Esporta / Importa** | CSV (foglio di calcolo) · JSON (backup completo, re-importabile). Project meta (cliente, data, auditor, scope) is included in every export. |
+| **Esporta / Importa** | CSV (foglio di calcolo) · JSON (backup completo, re-importabile). Project meta (cliente, data, auditor, scope) is included in every export. **Esporta framework (Excel)** produces a styled, customer-facing `.xlsx` of the active framework (Introduzione, one sheet per journey with one row per question, Standard di riferimento) — no audit answers, tags or internal keys. |
 
 Two journeys ship in the framework: **Conto corrente** (Orientamento · Apertura · Operatività · Chiusura) and **Mutuo prima casa** (Orientamento · Richiesta · Delibera · Operatività). Language is Italian throughout.
 
@@ -46,6 +46,7 @@ framework.js       The 276-question framework (questions, touchpoints, macro-ste
 data.jsx           Wraps framework.js and exposes window.AUDIT_DATA: QUESTIONS, MACRO_STEPS, TOUCHPOINT_LABELS, CONF_LEVELS, persistence helpers, etc.
 shared.jsx         window.AppShared — Icon set (IC), Pill, useAuditState hook, tally(), STATUS_KEY(), exportCSV / exportJSON.
 dashboard.jsx      window.DashboardView — aggregate metrics view.
+xlsx.jsx           window.XlsxExport — "Esporta framework (Excel)": minimal in-browser XLSX writer + customer-facing framework layout.
 app.jsx            window.AuditApp — top-level App, Sidebar, TopBar, MapView, QListView, QuestionView, MetaDialog, ConfirmDialog.
 polar.css          Design tokens (colors, type, spacing, radii). data-theme="bcc" on <body> (BCC brand + Montserrat); light/dark/vapor/fic also defined.
 app.css            App-specific styles built on top of polar tokens.
